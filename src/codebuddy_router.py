@@ -36,6 +36,9 @@ from .session_memory import inject_session_context, extract_and_save_facts
 from .thinking_stripper import StreamingThinkingStripper, strip_thinking_from_text
 from .request_logger import request_logger
 from . import health_monitor
+from .response_cache import response_cache
+from .session_affinity import session_affinity
+from .quota_estimator import quota_estimator
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +119,7 @@ class AppLifecycleManager:
         logger.info("CodeBuddy Router shutting down...")
         await close_http_client()
         usage_stats_manager.force_persist()
+        quota_estimator.flush()
         logger.info("Resources cleaned up")
 
 
@@ -987,11 +991,36 @@ async def _attempt_request_with_retry(
 ):
     """Try the request up to MAX_KEY_RETRIES times, rotating keys on retryable failures."""
     last_error = None
+    # Derive session key from client IP for affinity
+    session_key = ""
 
     for attempt in range(MAX_KEY_RETRIES):
-        credential = await CredentialManager.get_valid_credential()
-        cred_id = codebuddy_token_manager.get_credential_id_for_data(credential)
-        cred_filename = cred_id or "unknown"
+        # --- Session Affinity: try to reuse pinned credential ---
+        if attempt == 0 and session_key == "":
+            # session_key derived from conversation_id (stable across requests in same OpenCode session)
+            session_key = conversation_id or ""
+
+        pinned_cred_id = session_affinity.get_pinned_credential(session_key) if session_key else None
+
+        if pinned_cred_id and attempt == 0:
+            # Try to get the pinned credential directly
+            idx = codebuddy_token_manager._index_for_credential_id(pinned_cred_id)
+            if idx is not None:
+                cred_entry = codebuddy_token_manager.credentials[idx]
+                credential = cred_entry['data']
+                cred_id = pinned_cred_id
+                cred_filename = pinned_cred_id
+                logger.debug(f"Session affinity: using pinned cred {pinned_cred_id[:12]} for session {session_key[:8]}")
+            else:
+                # Pinned cred no longer exists
+                session_affinity.release_session(session_key)
+                credential = await CredentialManager.get_valid_credential()
+                cred_id = codebuddy_token_manager.get_credential_id_for_data(credential)
+                cred_filename = cred_id or "unknown"
+        else:
+            credential = await CredentialManager.get_valid_credential()
+            cred_id = codebuddy_token_manager.get_credential_id_for_data(credential)
+            cred_filename = cred_id or "unknown"
 
         headers = codebuddy_api_client.generate_codebuddy_headers(
             bearer_token=credential.get('bearer_token'),
@@ -1036,8 +1065,12 @@ async def _attempt_request_with_retry(
                         logger.warning(f"Key {cred_filename} auto-disabled: permanently banned (403/11140)")
                     elif status == 429 and cred_id is not None:
                         await codebuddy_token_manager.mark_key_exhausted(cred_id)
+                        if session_key:
+                            session_affinity.release_session(session_key)
                     elif _is_content_filter_error(error_msg) and cred_id is not None:
                         await codebuddy_token_manager.mark_key_exhausted(cred_id)
+                        if session_key:
+                            session_affinity.release_session(session_key)
                     last_error = HTTPException(status_code=status, detail=error_msg)
                     continue
 
@@ -1054,6 +1087,9 @@ async def _attempt_request_with_retry(
                     timestamp=time.time(), credential_id=cred_filename,
                     event_type="success", status_code=200
                 ))
+                # Pin this credential to the session on first success
+                if session_key and cred_id:
+                    session_affinity.pin_credential(session_key, cred_id)
                 return await service.handle_stream_response_from_open_stream(
                     response_ctx, stream_response, payload, headers, model=model
                 )
@@ -1138,6 +1174,12 @@ async def _attempt_request_with_retry(
                     timestamp=time.time(), credential_id=cred_filename,
                     event_type="success", status_code=200, latency_ms=total_time * 1000
                 ))
+                # Pin session + record quota
+                if session_key and cred_id:
+                    session_affinity.pin_credential(session_key, cred_id)
+                usage_in  = result.get("usage", {}).get("prompt_tokens", 0)
+                usage_out = result.get("usage", {}).get("completion_tokens", 0)
+                quota_estimator.record_usage(cred_filename, usage_in, usage_out)
                 return result
 
             except HTTPException:
@@ -1185,12 +1227,35 @@ async def chat_completions(
         model = request_body.get("model", "unknown")
         messages = request_body.get("messages", [])
 
-        # Check cache for non-streaming requests
+        # --- Response Dedup Cache (streaming: SSE replay, non-streaming: JSON) ---
+        if response_cache.should_cache(messages):
+            cached_sse = response_cache.get(model, messages)
+            if cached_sse is not None:
+                if client_wants_stream:
+                    async def replay_cache():
+                        yield cached_sse
+                        yield 'data: [DONE]\n\n'
+                    return StreamingResponse(replay_cache(), media_type="text/event-stream",
+                                            headers={**SSE_HEADERS, "X-Cache": "HIT"})
+                else:
+                    cached_json = _response_cache.get(model, messages, session_id=x_conversation_id)
+                    if cached_json is not None:
+                        return JSONResponse(content=cached_json, headers={"X-Cache": "HIT"})
+
+        # Non-streaming JSON cache (existing)
         if not client_wants_stream:
             cached = _response_cache.get(model, messages, session_id=x_conversation_id)
             if cached is not None:
                 logger.info(f"Cache HIT for model={model}")
                 return JSONResponse(content=cached, headers={"X-Cache": "HIT"})
+
+        # --- Cache-Control Injection (promotes prompt caching on Claude backend) ---
+        if messages:
+            for msg in messages:
+                if msg.get("role") == "system" and isinstance(msg.get("content"), str):
+                    if "cache_control" not in str(msg.get("content", "")):
+                        msg["cache_control"] = {"type": "ephemeral"}
+                    break
 
         result = await _attempt_request_with_retry(
             request_body,
@@ -1251,6 +1316,29 @@ async def list_v1_models(_token: str = Depends(authenticate)):
     except Exception as e:
         logger.error(f"Error listing V1 models: {e}")
         raise HTTPException(status_code=500, detail="Failed to list models")
+
+
+@router.get("/v1/quota", summary="Per-credential quota usage estimates")
+async def get_quota_usage(_token: str = Depends(authenticate)):
+    try:
+        return {
+            "daily_budget_tokens" : quota_estimator.DEFAULT_DAILY_TOKEN_BUDGET
+                                    if hasattr(quota_estimator, 'DEFAULT_DAILY_TOKEN_BUDGET')
+                                    else 500_000,
+            "usage"               : quota_estimator.get_all_usage(),
+        }
+    except Exception as e:
+        logger.error(f"Error retrieving quota usage: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve quota usage")
+
+
+@router.get("/v1/sessions", summary="Active session affinity map")
+async def get_active_sessions(_token: str = Depends(authenticate)):
+    try:
+        return session_affinity.stats()
+    except Exception as e:
+        logger.error(f"Error retrieving sessions: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve sessions")
 
 
 @router.get("/v1/stats")
