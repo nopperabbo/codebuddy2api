@@ -1,171 +1,204 @@
 # CodeBuddy2API
 
-OpenAI-compatible API wrapper untuk CodeBuddy. Bisa dipake di ChatBox, OpenCode, LobeChat, atau client apapun yang support OpenAI API format.
-
-## Quick Start
-
-```bash
-git clone https://github.com/nopperabbo/codebuddy2api.git
-cd codebuddy2api
-bash setup.sh
-```
-
-Script interaktif — tinggal jawab pertanyaan, semua otomatis.
+Akses AI model premium (Claude, GPT-5, Gemini) **gratis** lewat akun CodeBuddy.
+Project ini bikin server lokal yang bisa dipake di app AI manapun.
 
 ---
 
-## Manual Setup (kalau ga mau pake script)
+## Apa Ini?
 
-### 1. Install Dependencies
+CodeBuddy2API = "jembatan" antara akun CodeBuddy kamu dan aplikasi AI lain.
 
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+```
+Kamu punya akun CodeBuddy (gratis)
+        ↓
+CodeBuddy2API jalan di komputer kamu
+        ↓
+Bisa dipake di: OpenCode, ChatBox, LobeChat, dll
 ```
 
-### 2. Config
+---
+
+## Yang Dibutuhkan (Install Dulu)
+
+Sebelum mulai, pastikan ini sudah terinstall di komputer kamu:
+
+| Software | Cara Cek | Cara Install |
+|----------|----------|--------------|
+| **Python 3.10+** | Buka terminal, ketik: `python3 --version` | [python.org/downloads](https://www.python.org/downloads/) |
+| **Git** | `git --version` | [git-scm.com](https://git-scm.com/downloads) |
+| **Node.js 18+** *(opsional)* | `node --version` | [nodejs.org](https://nodejs.org/) |
+
+> **Cara buka terminal:**
+> - **Mac:** Tekan `Cmd + Space`, ketik "Terminal", Enter
+> - **Windows:** Tekan `Win + R`, ketik "cmd", Enter
+> - **Linux:** Tekan `Ctrl + Alt + T`
+
+---
+
+## Cara Install (3 Menit)
+
+### Langkah 1: Download Project
+
+Buka terminal, copy-paste perintah ini satu per satu:
 
 ```bash
-cp .env.example .env
+git clone https://github.com/nopperabbo/codebuddy2api.git
+```
+
+```bash
+cd codebuddy2api
+```
+
+### Langkah 2: Jalankan Setup
+
+```bash
+bash setup.sh
+```
+
+Script ini bakal:
+- Install semua yang dibutuhkan secara otomatis
+- Nanya beberapa pertanyaan (tinggal jawab)
+- Kasih tau langkah selanjutnya
+
+> **Kalau ada error**, baca pesan error-nya — biasanya kasih tau apa yang kurang.
+
+### Langkah 3: Set Password
+
+Setelah setup selesai, buka file `.env`:
+
+```bash
 nano .env
 ```
 
-Yang **wajib** diisi: `CODEBUDDY_PASSWORD` (password bebas, buat akses API).
+Cari baris `CODEBUDDY_PASSWORD=` dan isi password bebas (ini buat akses API nanti):
 
-### 3. Jalankan
+```
+CODEBUDDY_PASSWORD=rahasia123
+```
+
+Simpan: tekan `Ctrl + X`, lalu `Y`, lalu `Enter`.
+
+### Langkah 4: Jalankan Server
 
 ```bash
 source venv/bin/activate
 python web.py
 ```
 
-### 4. Tambah Credential
+Kalau berhasil, akan muncul pesan bahwa server jalan di `http://127.0.0.1:8003`.
 
-1. Buka `http://127.0.0.1:8003`
-2. Login pake password dari `.env`
-3. Tab "Credential Management" → "Start Authentication"
-4. Login ke akun CodeBuddy
-5. Done — credential otomatis tersimpan
+### Langkah 5: Tambah Akun CodeBuddy
+
+1. Buka browser (Chrome/Firefox)
+2. Pergi ke: `http://127.0.0.1:8003`
+3. Masukkan password yang kamu set tadi
+4. Klik tab **"Credential Management"**
+5. Klik **"Start Authentication"**
+6. Login pake akun CodeBuddy kamu
+7. Selesai! Credential tersimpan otomatis
+
+> Belum punya akun CodeBuddy? Daftar gratis di [codebuddy.ai](https://www.codebuddy.ai)
 
 ---
 
-## Pake di Client
+## Cara Pake
 
-| Setting | Value |
-|---------|-------|
-| Base URL | `http://127.0.0.1:8003/codebuddy/v1` |
-| API Key | password dari `.env` |
-| Model | `auto-chat` (recommended) |
+Setelah server jalan, kamu bisa pake di app AI manapun dengan setting:
 
-### Model Tersedia
+| Setting | Isi dengan |
+|---------|-----------|
+| **Base URL** | `http://127.0.0.1:8003/codebuddy/v1` |
+| **API Key** | Password yang kamu set di `.env` |
+| **Model** | `auto-chat` |
 
-| Model | Keterangan |
-|-------|------------|
-| `auto-chat` | Auto pilih model terbaik |
-| `auto-smart` | Prioritas kualitas |
-| `auto-fast` | Prioritas kecepatan |
-| `claude-opus-4.6` | Claude Opus 4.6 |
-| `gpt-5.5` | GPT-5.5 |
-| `gpt-5` | GPT-5 |
-| `gemini-2.5-pro` | Gemini 2.5 Pro |
-| `gemini-3.1-pro` | Gemini 3.1 Pro |
-| `o4-mini` | O4 Mini |
-| `claude-haiku-4.5` | Claude Haiku 4.5 |
+### Model yang Bisa Dipake
 
-### Contoh Python
+| Model | Cocok untuk |
+|-------|-------------|
+| `auto-chat` | Sehari-hari (recommended) |
+| `auto-smart` | Tugas yang butuh mikir banyak |
+| `auto-fast` | Jawaban cepat |
+| `claude-opus-4.6` | Coding dan analisis kompleks |
+| `gpt-5.5` | General purpose |
+| `gemini-2.5-pro` | Dokumen panjang |
 
-```python
-import openai
+---
 
-client = openai.OpenAI(
-    api_key="password_kamu",
-    base_url="http://127.0.0.1:8003/codebuddy/v1"
-)
+## Cara Matikan Server
 
-response = client.chat.completions.create(
-    model="auto-chat",
-    messages=[{"role": "user", "content": "Hello!"}]
-)
-print(response.choices[0].message.content)
+Di terminal yang lagi jalan server-nya, tekan `Ctrl + C`.
+
+---
+
+## Cara Jalankan Lagi (Besok/Lusa)
+
+Setiap mau pake lagi:
+
+```bash
+cd codebuddy2api
+source venv/bin/activate
+python web.py
 ```
 
 ---
 
-## OpenCode AI Config (Bonus)
+## OpenCode AI Config (Opsional - Untuk Developer)
 
-Repo ini juga include full config untuk [OpenCode](https://opencode.ai/) — AI coding assistant yang pake CodeBuddy2API sebagai backend.
+Repo ini juga include config untuk **OpenCode** — AI coding assistant yang bisa pake semua model di atas langsung dari terminal.
 
-**Apa yang termasuk:**
-- 42 specialized AI agents (debugger, reviewer, architect, dll)
-- 90+ skills (DevOps, frontend, backend, security, dll)
-- Custom plugins (auto-checkpoint, git-safety, context-keeper)
-- Model routing & profiles
-- MCP server configs (GitHub, Playwright, memory, dll)
+**Apa itu OpenCode?**
+Kayak ChatGPT tapi di terminal, bisa langsung edit code, baca file, jalankan command. Cocok buat developer.
 
-**Install:** Jalankan `bash setup.sh` dan jawab "y" waktu ditanya soal OpenCode.
+**Cara install:**
+Waktu jalankan `bash setup.sh`, jawab `y` pas ditanya "Install OpenCode config?"
 
-**Prerequisites tambahan:**
-- Node.js 18+ (`node --version`)
-- Bun (`curl -fsSL https://bun.sh/install | bash`)
-- OpenCode CLI (`npm install -g opencode`)
+**Yang perlu diinstall tambahan:**
+- Node.js 18+ (wajib)
+- Bun: `curl -fsSL https://bun.sh/install | bash`
+- OpenCode: `npm install -g opencode`
 
-Detail config: lihat [`opencode-config/README.md`](opencode-config/README.md)
+Setelah install, jalankan `opencode` di terminal.
+
+Detail lengkap: lihat [opencode-config/README.md](opencode-config/README.md)
 
 ---
 
-## Docker
+## Troubleshooting (Kalau Ada Masalah)
+
+### "python3 not found"
+Python belum terinstall. Download dari [python.org](https://www.python.org/downloads/).
+
+### "git not found"
+Git belum terinstall. Download dari [git-scm.com](https://git-scm.com/downloads).
+
+### "No valid credentials"
+Belum tambah akun CodeBuddy. Buka `http://127.0.0.1:8003` dan ikuti Langkah 5.
+
+### "Invalid password"
+Password di app client kamu ga sama dengan yang di file `.env`.
+
+### Server ga bisa diakses dari HP
+Ganti `CODEBUDDY_HOST=0.0.0.0` di file `.env`, restart server.
+
+### Port 8003 sudah dipakai
+Ganti `CODEBUDDY_PORT=8005` (atau angka lain) di file `.env`.
+
+---
+
+## Akses dari HP (Satu WiFi)
+
+1. Edit `.env`: ganti `CODEBUDDY_HOST=0.0.0.0`
+2. Restart server
+3. Cek IP komputer: `ifconfig` (Mac) atau `ipconfig` (Windows)
+4. Di HP, pake: `http://IP_KOMPUTER:8003/codebuddy/v1`
+
+---
+
+## Docker (Untuk yang Sudah Familiar)
 
 ```bash
 docker-compose up -d
-```
-
-Atau manual:
-```bash
-docker build -t codebuddy2api .
-docker run -d -p 8003:8003 --env-file .env codebuddy2api
-```
-
----
-
-## Akses dari Device Lain (Satu WiFi)
-
-1. Set `CODEBUDDY_HOST=0.0.0.0` di `.env`
-2. Cek IP: `ifconfig` (Mac) / `ipconfig` (Windows)
-3. Akses: `http://IP_KAMU:8003/codebuddy/v1`
-
----
-
-## Troubleshooting
-
-| Error | Solusi |
-|-------|--------|
-| "No valid credentials" | Buka web admin, tambah credential via OAuth |
-| "Invalid password" | API key di client ga match `CODEBUDDY_PASSWORD` |
-| "401/403" | Credential expired — hapus & login ulang di web admin |
-| Port conflict | Ganti `CODEBUDDY_PORT` di `.env` |
-
----
-
-## Struktur Project
-
-```
-codebuddy2api/
-├── web.py                  # Entry point (FastAPI)
-├── config.py               # Config management
-├── src/                    # Source code
-│   ├── codebuddy_router.py     # /v1/chat/completions
-│   ├── codebuddy_api_client.py # Client ke CodeBuddy
-│   ├── codebuddy_token_manager.py # Credential rotation
-│   └── ...
-├── frontend/               # Web admin UI
-├── opencode-config/        # OpenCode AI config (opsional)
-├── setup.sh                # One-click setup script
-├── start.sh                # Start server (Linux/Mac)
-├── start.bat               # Start server (Windows)
-├── .env.example            # Template config
-├── Dockerfile              # Docker image
-└── docker-compose.yml      # Docker Compose
 ```
 
 ---
