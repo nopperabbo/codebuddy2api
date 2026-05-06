@@ -247,6 +247,60 @@ codebuddy2api/
 
 ---
 
+---
+
+## One-Click Setup (Termasuk OpenCode Config)
+
+Buat yang mau langsung pake project ini + full OpenCode AI coding assistant config:
+
+```bash
+git clone https://github.com/nopperabbo/codebuddy2api.git
+cd codebuddy2api
+bash setup.sh
+```
+
+Script `setup.sh` otomatis:
+1. Install Python venv + dependencies
+2. Install OpenCode config ke `~/.config/opencode/` (AGENTS.md, skills, plugins, MCP servers)
+3. Buat `.env` template — tinggal isi API keys
+
+### Setelah Setup
+
+1. Edit `.env` — isi API keys:
+   - `ENOWX_API_KEY` — dari EnowX Labs
+   - `CODEBUDDY_API_KEY` — password CodeBuddy2API kamu
+   - `GITHUB_TOKEN` — GitHub Personal Access Token
+   - `GEMINI_API_KEY` — Google AI Studio key (buat embeddings)
+
+2. Jalankan `bash setup.sh` lagi (biar keys ke-inject ke opencode config)
+
+3. Start CodeBuddy2API: `bash start.sh`
+
+4. Start OpenCode: `opencode`
+
+### Apa yang Termasuk di OpenCode Config
+
+| Component | Keterangan |
+|-----------|------------|
+| `AGENTS.md` | System prompt + 42 agent roles |
+| `agents.json` | Agent definitions (debugger, reviewer, architect, dll) |
+| `opencode.json` | Provider config (EnowX Labs, CodeBuddy Direct) |
+| `dcp.jsonc` | Dynamic Context Pruning config |
+| `oh-my-openagent.json` | Agent model routing |
+| `skills/` | 90+ specialized skills (DevOps, frontend, backend, dll) |
+| `plugins/` | Custom plugins (auto-checkpoint, git-safety, dll) |
+| `profiles/` | Model profiles (quality, speed, budget) |
+| `prompts/` | Custom prompt templates |
+| `cli/` | Context-keeper MCP server + utilities |
+
+### Prerequisites untuk OpenCode
+
+- [Node.js 18+](https://nodejs.org/)
+- [Bun](https://bun.sh/) (untuk context-keeper MCP)
+- [OpenCode CLI](https://opencode.ai/) (`npm install -g opencode`)
+
+---
+
 ## License
 
 MIT
