@@ -1,210 +1,167 @@
 #!/bin/bash
-# ============================================================
-# CodeBuddy2API + OpenCode Config - One-Click Setup
-# ============================================================
-# Usage: curl -sSL <raw-url>/setup.sh | bash
-#   or:  git clone ... && cd codebuddy2api && bash setup.sh
-# ============================================================
-
 set -e
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
-info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-success() { echo -e "${GREEN}[OK]${NC} $1"; }
-warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
-
-echo ""
-echo "╔══════════════════════════════════════════════════╗"
-echo "║   CodeBuddy2API + OpenCode Config Setup         ║"
-echo "╚══════════════════════════════════════════════════╝"
-echo ""
-
-# ---- Check prerequisites ----
-info "Checking prerequisites..."
-
-command -v python3 >/dev/null 2>&1 || error "python3 not found. Install Python 3.10+"
-command -v node >/dev/null 2>&1 || error "node not found. Install Node.js 18+"
-command -v npm >/dev/null 2>&1 || error "npm not found. Install Node.js 18+"
-command -v git >/dev/null 2>&1 || error "git not found. Install git"
-
-# Check for bun (optional but recommended for context-keeper)
-if command -v bun >/dev/null 2>&1; then
-    success "bun found"
-    HAS_BUN=true
-else
-    warn "bun not found - context-keeper MCP won't work without it"
-    warn "Install: curl -fsSL https://bun.sh/install | bash"
-    HAS_BUN=false
-fi
-
-# Check for opencode
-if command -v opencode >/dev/null 2>&1; then
-    success "opencode CLI found"
-else
-    warn "opencode CLI not found"
-    warn "Install: npm install -g opencode"
-fi
-
-success "Prerequisites OK"
-echo ""
-
-# ---- Setup Python venv for CodeBuddy2API ----
-info "Setting up Python virtual environment..."
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; BOLD='\033[1m'; NC='\033[0m'
+info() { echo -e "${BLUE}▸${NC} $1"; }
+ok() { echo -e "${GREEN}✓${NC} $1"; }
+warn() { echo -e "${YELLOW}⚠${NC} $1"; }
+fail() { echo -e "${RED}✗${NC} $1"; exit 1; }
+ask() { echo -e "${BOLD}$1${NC}"; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-if [ ! -d "venv" ]; then
-    python3 -m venv venv
-    success "Created venv"
-else
-    success "venv already exists"
-fi
+clear
+echo ""
+echo -e "${BOLD}  ┌─────────────────────────────────────────┐${NC}"
+echo -e "${BOLD}  │  CodeBuddy2API — Quick Setup             │${NC}"
+echo -e "${BOLD}  └─────────────────────────────────────────┘${NC}"
+echo ""
+echo "  Ini bakal setup:"
+echo "    1. CodeBuddy2API server (Python)"
+echo "    2. OpenCode AI config (opsional)"
+echo ""
 
+HAS_ERRORS=false
+
+info "Checking system requirements..."
+command -v python3 >/dev/null 2>&1 && ok "Python 3 $(python3 --version 2>&1 | cut -d' ' -f2)" || { fail "python3 not found — install dari https://python.org"; }
+command -v node >/dev/null 2>&1 && ok "Node.js $(node --version)" || { warn "node not found — OpenCode config butuh ini"; HAS_ERRORS=true; }
+command -v git >/dev/null 2>&1 && ok "git $(git --version | cut -d' ' -f3)" || { fail "git not found"; }
+echo ""
+
+echo -e "${BOLD}━━━ Step 1: CodeBuddy2API Server ━━━${NC}"
+echo ""
+
+if [ ! -d "venv" ]; then
+    info "Creating Python virtual environment..."
+    python3 -m venv venv
+fi
 source venv/bin/activate
 pip install -q --upgrade pip
 pip install -q -r requirements.txt
-success "Python dependencies installed"
-echo ""
+ok "Python dependencies installed"
 
-# ---- Setup OpenCode Config ----
-info "Setting up OpenCode configuration..."
-
-OPENCODE_DIR="$HOME/.config/opencode"
-BACKUP_DIR="$OPENCODE_DIR.backup.$(date +%Y%m%d_%H%M%S)"
-
-# Backup existing config if present
-if [ -d "$OPENCODE_DIR" ]; then
-    warn "Existing OpenCode config found at $OPENCODE_DIR"
-    read -p "  Backup and replace? [y/N] " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        mv "$OPENCODE_DIR" "$BACKUP_DIR"
-        success "Backed up to $BACKUP_DIR"
-    else
-        warn "Skipping OpenCode config setup (keeping existing)"
-        SKIP_OPENCODE=true
-    fi
-fi
-
-if [ "${SKIP_OPENCODE:-false}" = "false" ]; then
-    mkdir -p "$OPENCODE_DIR"
-
-    # Copy config files
-    cp -r "$SCRIPT_DIR/opencode-config/"* "$OPENCODE_DIR/"
-
-    # Install npm dependencies for opencode plugins
-    info "Installing OpenCode plugin dependencies..."
-    cd "$OPENCODE_DIR"
-    npm install --silent 2>/dev/null || npm install
-    success "OpenCode plugins installed"
-
-    # Install bun deps for cli if bun available
-    if [ "$HAS_BUN" = true ] && [ -f "$OPENCODE_DIR/cli/package.json" ]; then
-        cd "$OPENCODE_DIR/cli"
-        bun install --silent 2>/dev/null || true
-    fi
-
-    cd "$SCRIPT_DIR"
-    success "OpenCode config installed to $OPENCODE_DIR"
-fi
-
-echo ""
-
-# ---- Create .env template ----
-info "Setting up environment..."
-
-ENV_FILE="$SCRIPT_DIR/.env"
-if [ ! -f "$ENV_FILE" ]; then
-    cat > "$ENV_FILE" << 'ENVEOF'
-# CodeBuddy2API Environment
-# Copy this to .env and fill in your values
-
-# GitHub Token (for MCP GitHub search)
-GITHUB_TOKEN=ghp_your_token_here
-
-# Gemini API Key (for contextplus embeddings)
-GEMINI_API_KEY=your_gemini_api_key_here
-
-# Exa API Key (optional - for web search)
-EXA_API_KEY=your_exa_key_here
-
-# EnowX Labs API Key (for opencode provider)
-ENOWX_API_KEY=your_enowx_key_here
-
-# CodeBuddy Direct API Key
-CODEBUDDY_API_KEY=your_codebuddy_key_here
-ENVEOF
-    warn "Created .env template - EDIT THIS FILE with your actual keys!"
+if [ ! -f ".env" ]; then
+    cp .env.example .env
+    ok "Created .env from template"
+    echo ""
+    warn "PENTING: Edit file .env dan isi CODEBUDDY_PASSWORD"
+    echo "    nano .env"
+    echo ""
 else
-    success ".env already exists"
+    ok ".env sudah ada"
 fi
-
 echo ""
 
-# ---- Patch opencode.json with actual API keys from .env ----
-info "Configuring OpenCode with your API keys..."
+echo -e "${BOLD}━━━ Step 2: OpenCode AI Config (Opsional) ━━━${NC}"
+echo ""
+echo "  OpenCode = AI coding assistant yang pake CodeBuddy2API"
+echo "  sebagai backend. Config ini include 90+ skills, plugins,"
+echo "  dan agent routing yang udah di-tune."
+echo ""
 
-if [ "${SKIP_OPENCODE:-false}" = "false" ]; then
-    OPENCODE_JSON="$OPENCODE_DIR/opencode.json"
-    if [ -f "$ENV_FILE" ]; then
-        # Source env vars
-        set -a
-        source "$ENV_FILE" 2>/dev/null || true
-        set +a
+read -p "  Install OpenCode config? [y/N] " -n 1 -r
+echo ""
 
-        # Replace placeholders in opencode.json
-        if [ -n "$ENOWX_API_KEY" ] && [ "$ENOWX_API_KEY" != "your_enowx_key_here" ]; then
-            sed -i.bak "s/YOUR_ENOWX_API_KEY_HERE/$ENOWX_API_KEY/g" "$OPENCODE_JSON" 2>/dev/null || \
-            sed -i '' "s/YOUR_ENOWX_API_KEY_HERE/$ENOWX_API_KEY/g" "$OPENCODE_JSON"
-            success "EnowX API key configured"
-        else
-            warn "EnowX API key not set - edit .env and re-run"
-        fi
-
-        if [ -n "$CODEBUDDY_API_KEY" ] && [ "$CODEBUDDY_API_KEY" != "your_codebuddy_key_here" ]; then
-            sed -i.bak "s/YOUR_CODEBUDDY_API_KEY_HERE/$CODEBUDDY_API_KEY/g" "$OPENCODE_JSON" 2>/dev/null || \
-            sed -i '' "s/YOUR_CODEBUDDY_API_KEY_HERE/$CODEBUDDY_API_KEY/g" "$OPENCODE_JSON"
-            success "CodeBuddy API key configured"
-        else
-            warn "CodeBuddy API key not set - edit .env and re-run"
-        fi
-
-        # Fix $HOME paths to actual home
-        sed -i.bak "s|\\\$HOME|$HOME|g" "$OPENCODE_JSON" 2>/dev/null || \
-        sed -i '' "s|\\\$HOME|$HOME|g" "$OPENCODE_JSON"
-
-        # Cleanup .bak files
-        rm -f "$OPENCODE_JSON.bak"
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    if ! command -v node >/dev/null 2>&1; then
+        fail "Node.js dibutuhkan untuk OpenCode. Install dulu: https://nodejs.org"
     fi
+
+    OPENCODE_DIR="$HOME/.config/opencode"
+
+    if [ -d "$OPENCODE_DIR" ] && [ -f "$OPENCODE_DIR/opencode.json" ]; then
+        echo ""
+        warn "OpenCode config sudah ada di $OPENCODE_DIR"
+        read -p "  Overwrite? (backup otomatis) [y/N] " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            BACKUP="$OPENCODE_DIR.bak.$(date +%m%d_%H%M)"
+            mv "$OPENCODE_DIR" "$BACKUP"
+            ok "Backup: $BACKUP"
+        else
+            ok "Skip — config lama dipertahankan"
+            SKIP_OC=true
+        fi
+    fi
+
+    if [ "${SKIP_OC:-}" != "true" ]; then
+        info "Copying config..."
+        mkdir -p "$OPENCODE_DIR"
+        cp -r "$SCRIPT_DIR/opencode-config/"* "$OPENCODE_DIR/"
+
+        info "Installing plugins..."
+        cd "$OPENCODE_DIR" && npm install --silent 2>/dev/null || npm install
+        cd "$SCRIPT_DIR"
+
+        if command -v bun >/dev/null 2>&1 && [ -f "$OPENCODE_DIR/cli/package.json" ]; then
+            cd "$OPENCODE_DIR/cli" && bun install --silent 2>/dev/null || true
+            cd "$SCRIPT_DIR"
+        fi
+
+        ok "OpenCode config installed"
+        echo ""
+
+        echo -e "${BOLD}  Sekarang configure API keys:${NC}"
+        echo ""
+
+        OPENCODE_JSON="$OPENCODE_DIR/opencode.json"
+
+        read -p "  EnowX API Key (kosongkan kalau belum punya): " ENOWX_KEY
+        if [ -n "$ENOWX_KEY" ]; then
+            sed -i '' "s/YOUR_ENOWX_API_KEY_HERE/$ENOWX_KEY/g" "$OPENCODE_JSON" 2>/dev/null || \
+            sed -i "s/YOUR_ENOWX_API_KEY_HERE/$ENOWX_KEY/g" "$OPENCODE_JSON"
+            ok "EnowX key set"
+        fi
+
+        read -p "  CodeBuddy password (sama dengan CODEBUDDY_PASSWORD di .env): " CB_KEY
+        if [ -n "$CB_KEY" ]; then
+            sed -i '' "s/YOUR_CODEBUDDY_API_KEY_HERE/$CB_KEY/g" "$OPENCODE_JSON" 2>/dev/null || \
+            sed -i "s/YOUR_CODEBUDDY_API_KEY_HERE/$CB_KEY/g" "$OPENCODE_JSON"
+            ok "CodeBuddy key set"
+        fi
+
+        read -p "  GitHub Token (untuk search, kosongkan kalau skip): " GH_TOKEN
+        if [ -n "$GH_TOKEN" ]; then
+            echo "export GITHUB_TOKEN=$GH_TOKEN" >> "$HOME/.zshrc" 2>/dev/null || \
+            echo "export GITHUB_TOKEN=$GH_TOKEN" >> "$HOME/.bashrc"
+            ok "GitHub token added to shell profile"
+        fi
+
+        sed -i '' "s|\\\$HOME|$HOME|g" "$OPENCODE_JSON" 2>/dev/null || \
+        sed -i "s|\\\$HOME|$HOME|g" "$OPENCODE_JSON"
+        rm -f "$OPENCODE_JSON.bak"
+
+        echo ""
+        ok "OpenCode ready!"
+    fi
+else
+    ok "Skipped OpenCode config"
 fi
 
 echo ""
-
-# ---- Final summary ----
-echo "╔══════════════════════════════════════════════════╗"
-echo "║   Setup Complete!                               ║"
-echo "╚══════════════════════════════════════════════════╝"
+echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-success "CodeBuddy2API project ready"
-success "OpenCode config installed"
+echo -e "  ${GREEN}Setup selesai!${NC}"
 echo ""
-echo "Next steps:"
-echo "  1. Edit .env with your actual API keys"
-echo "  2. Run: bash setup.sh  (again, to apply keys)"
-echo "  3. Start CodeBuddy2API: bash start.sh"
-echo "  4. Start OpenCode: opencode"
+echo "  Langkah selanjutnya:"
 echo ""
-echo "Required API keys:"
-echo "  - GITHUB_TOKEN    : GitHub Personal Access Token"
-echo "  - GEMINI_API_KEY  : Google AI Studio API key"
-echo "  - ENOWX_API_KEY   : EnowX Labs API key"
-echo "  - CODEBUDDY_API_KEY: CodeBuddy proxy key"
+echo -e "  ${BOLD}1.${NC} Edit .env (kalau belum):"
+echo "     nano .env"
 echo ""
-info "For issues, check README.md"
+echo -e "  ${BOLD}2.${NC} Jalankan server:"
+echo "     source venv/bin/activate && python web.py"
+echo ""
+echo -e "  ${BOLD}3.${NC} Buka browser → http://127.0.0.1:8003"
+echo "     Login, tambah credential CodeBuddy"
+echo ""
+echo -e "  ${BOLD}4.${NC} Pake di OpenCode/ChatBox/client lain:"
+echo "     Base URL: http://127.0.0.1:8003/codebuddy/v1"
+echo "     API Key:  (password dari .env)"
+echo ""
+if [[ ! $REPLY =~ ^[Nn]$ ]] && [ "${SKIP_OC:-}" != "true" ]; then
+    echo -e "  ${BOLD}5.${NC} Start OpenCode:"
+    echo "     opencode"
+    echo ""
+fi
