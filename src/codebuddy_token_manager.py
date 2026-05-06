@@ -156,6 +156,9 @@ class CodeBuddyTokenManager:
                             f"current_index={self.current_index}, "
                             f"exhausted_keys={len(self.exhausted_keys)}, "
                             f"disabled_keys={len(self.disabled_keys)}")
+                if self.disabled_keys:
+                    logger.warning(f"Auto-blacklisted keys ({len(self.disabled_keys)}): "
+                                   f"{', '.join(sorted(self.disabled_keys))}")
         except Exception as e:
             logger.warning(f"Failed to load manager state: {e}")
 

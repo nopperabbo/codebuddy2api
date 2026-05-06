@@ -33,6 +33,9 @@ from .model_router import route_model
 from .prompt_enhancer import enhance_prompt
 from .context_manager import manage_context
 from .session_memory import inject_session_context, extract_and_save_facts
+from .thinking_stripper import StreamingThinkingStripper, strip_thinking_from_text
+from .request_logger import request_logger
+from . import health_monitor
 
 logger = logging.getLogger(__name__)
 
@@ -367,6 +370,15 @@ def _is_content_filter_error(text: str) -> bool:
     return any(ind.lower() in text_lower for ind in indicators)
 
 
+def _is_permanently_banned(status_code: int, error_msg: str) -> bool:
+    """Check if response indicates a permanently banned/invalid credential."""
+    if status_code != 403:
+        return False
+    banned_indicators = ["11140", "request not illegal"]
+    text_lower = error_msg.lower()
+    return any(ind in text_lower for ind in banned_indicators)
+
+
 class SSEConnectionManager:
 
     def __init__(self, max_retries: int = 3, retry_delay: float = 1.0):
@@ -553,11 +565,15 @@ class CodeBuddyStreamService:
         else:
             raise HTTPException(status_code=status_code, detail=f"CodeBuddy API error: {error_msg}")
 
-    async def _stream_from_response(self, response, stream_ctx, model: str, request_start: float):
+    async def _stream_from_response(self, response, stream_ctx, model: str, request_start: float,
+                                    credential_id: str = "", request_id: str = ""):
         first_byte_recorded = False
         ttfb = 0.0
         done_sent = False
         malformed_count = 0
+        thinking_stripper = StreamingThinkingStripper()
+        total_output_tokens = 0
+        final_finish_reason = None
         total_chunks = 0
         KEEPALIVE_INTERVAL = 10.0
         # Repetition detection: only fire for *meaningful* content repeated many times.
@@ -645,6 +661,14 @@ class CodeBuddyStreamService:
                                 )
                                 sanitized = sanitize_sse_chunk(converted_chunk)
                                 sanitized = _deobfuscate_sse_chunk(sanitized)
+                                # Strip thinking/signature blocks (enowx-style)
+                                sanitized, _ = thinking_stripper.process_chunk(sanitized)
+                                # Track finish reason and output tokens for logging
+                                for _ch in sanitized.get('choices', []):
+                                    if _ch.get('finish_reason'):
+                                        final_finish_reason = _ch['finish_reason']
+                                    _content = _ch.get('delta', {}).get('content') or ''
+                                    total_output_tokens += len(_content.split())
                                 yield f"data: {json.dumps(sanitized, ensure_ascii=False)}\n\n"
                             else:
                                 malformed_count += 1
@@ -703,9 +727,32 @@ class CodeBuddyStreamService:
                         sanitized = _deobfuscate_sse_chunk(sanitized)
                         yield f"data: {json.dumps(sanitized, ensure_ascii=False)}\n\n"
 
+            # Flush any remaining buffered content from thinking stripper
+            remainder, total_stripped = thinking_stripper.flush()
+            if remainder.strip():
+                yield f"data: {json.dumps({'choices': [{'delta': {'content': remainder}, 'finish_reason': None}]}, ensure_ascii=False)}\n\n"
+            if total_stripped:
+                logger.info(f"Thinking stripper removed {total_stripped} block(s) from stream (model={model})")
+
             if first_byte_recorded:
                 total_time = time.monotonic() - request_start
                 usage_stats_manager.record_latency(model, ttfb, total_time)
+                # Health monitor + request log
+                health_monitor.mark_credential_success(credential_id, total_time * 1000)
+                asyncio.ensure_future(request_logger.log_request(
+                    request_id=request_id or str(uuid.uuid4()),
+                    model=model,
+                    provider="codebuddy",
+                    credential_id=credential_id or None,
+                    stream=True,
+                    input_tokens=0,
+                    output_tokens=total_output_tokens,
+                    ttfb_ms=ttfb * 1000,
+                    total_ms=total_time * 1000,
+                    finish_reason=final_finish_reason,
+                    thinking_blocks_stripped=thinking_stripper.total_stripped,
+                    status="ok",
+                ))
         finally:
             if not done_sent:
                 if total_chunks == 0 and malformed_count > 0:
@@ -724,7 +771,8 @@ class CodeBuddyStreamService:
             headers=SSE_HEADERS
         )
 
-    async def handle_stream_response(self, payload: Dict[str, Any], headers: Dict[str, str], model: str = "unknown") -> StreamingResponse:
+    async def handle_stream_response(self, payload: Dict[str, Any], headers: Dict[str, str], model: str = "unknown",
+                                     credential_id: str = "", request_id: str = "") -> StreamingResponse:
         request_start = time.monotonic()
 
         async def stream_core():
@@ -737,10 +785,23 @@ class CodeBuddyStreamService:
                 await stream_ctx.__aexit__(None, None, None)
                 error_msg = error_text.decode('utf-8', errors='ignore')
                 translated = deobfuscate_response(error_msg)
+                health_monitor.mark_credential_failure(credential_id, f"HTTP {response.status_code}")
+                asyncio.ensure_future(request_logger.log_request(
+                    request_id=request_id or str(uuid.uuid4()),
+                    model=model, provider="codebuddy",
+                    credential_id=credential_id or None, stream=True,
+                    input_tokens=0, output_tokens=0, ttfb_ms=None,
+                    total_ms=(time.monotonic() - request_start) * 1000,
+                    finish_reason=None, status="error",
+                    error=f"HTTP {response.status_code}",
+                ))
                 yield format_sse_error(f"CodeBuddy API error: {response.status_code} - {translated}", "api_error")
                 return
 
-            async for chunk in self._stream_from_response(response, stream_ctx, model, request_start):
+            async for chunk in self._stream_from_response(
+                response, stream_ctx, model, request_start,
+                credential_id=credential_id, request_id=request_id
+            ):
                 yield chunk
 
         async def stream_with_retry():
@@ -970,9 +1031,12 @@ async def _attempt_request_with_retry(
                         timestamp=time.time(), credential_id=cred_filename,
                         event_type="failure", status_code=status, error=error_msg[:200]
                     ))
-                    if status == 429 and cred_id is not None:
+                    if _is_permanently_banned(status, error_msg) and cred_id is not None:
+                        await codebuddy_token_manager.disable_key(cred_id)
+                        logger.warning(f"Key {cred_filename} auto-disabled: permanently banned (403/11140)")
+                    elif status == 429 and cred_id is not None:
                         await codebuddy_token_manager.mark_key_exhausted(cred_id)
-                    if _is_content_filter_error(error_msg) and cred_id is not None:
+                    elif _is_content_filter_error(error_msg) and cred_id is not None:
                         await codebuddy_token_manager.mark_key_exhausted(cred_id)
                     last_error = HTTPException(status_code=status, detail=error_msg)
                     continue
@@ -1027,9 +1091,12 @@ async def _attempt_request_with_retry(
                         timestamp=time.time(), credential_id=cred_filename,
                         event_type="failure", status_code=response.status_code, error=error_msg[:200]
                     ))
-                    if response.status_code == 429 and cred_id is not None:
+                    if _is_permanently_banned(response.status_code, error_msg) and cred_id is not None:
+                        await codebuddy_token_manager.disable_key(cred_id)
+                        logger.warning(f"Key {cred_filename} auto-disabled: permanently banned (403/11140)")
+                    elif response.status_code == 429 and cred_id is not None:
                         await codebuddy_token_manager.mark_key_exhausted(cred_id)
-                    if _is_content_filter_error(error_msg) and cred_id is not None:
+                    elif _is_content_filter_error(error_msg) and cred_id is not None:
                         await codebuddy_token_manager.mark_key_exhausted(cred_id)
                     last_error = HTTPException(status_code=response.status_code, detail=error_msg)
                     continue
