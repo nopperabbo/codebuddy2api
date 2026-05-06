@@ -1798,6 +1798,24 @@
 
                 <div class="card" style="margin-top: 1.5rem;">
                     <div class="card-header">
+                        <h3 class="card-title">Credit Balance</h3>
+                        <button class="btn btn-sm" onclick="loadCreditData()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="credit-summary" style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-light); display: flex; gap: 2rem; font-size: 0.85rem; color: var(--secondary-color);">
+                        <span>Loading...</span>
+                    </div>
+                    <div id="credit-credentials-list">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <div>Loading credit data...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
                         <h3 class="card-title">Active Alerts</h3>
                     </div>
                     <div id="health-alerts-list">
@@ -2001,8 +2019,9 @@
                 loadCredentials();
             } else if (tabId === 'settings') {
                 loadSettings();
-            } else if (tabId === 'health') {
-                loadHealthData();
+} else if (tabId === 'health') {
+loadHealthData();
+loadCreditData();
             }
         }
 
@@ -3511,6 +3530,102 @@
             } catch (error) {
                 document.getElementById('health-alerts-list').innerHTML =
                     `<p style="text-align: center; color: var(--error-color); padding: 1rem;">Failed: ${error.message}</p>`;
+            }
+        }
+
+        async function loadCreditData() {
+            try {
+                const response = await fetch('/api/health/credits', { headers: getAuthHeaders() });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+
+                const summary = data.summary || {};
+                const summaryEl = document.getElementById('credit-summary');
+                if (summary.checked > 0) {
+                    summaryEl.innerHTML = `
+                        <span>Total: <strong>${formatTokens(summary.total_capacity)}</strong></span>
+                        <span>Used: <strong>${formatTokens(summary.total_used)}</strong></span>
+                        <span>Remaining: <strong style="color: var(--success-color);">${formatTokens(summary.total_remaining)}</strong></span>
+                        <span>Usage: <strong>${summary.overall_usage_pct}%</strong></span>
+                        <span style="margin-left: auto;">
+                            <span style="color: var(--success-color);">${summary.ok} ok</span> /
+                            <span style="color: var(--warning-color);">${summary.warning} warn</span> /
+                            <span style="color: var(--error-color);">${summary.critical} crit</span>
+                        </span>
+                    `;
+                } else {
+                    summaryEl.innerHTML = '<span>No credit data yet. Checking in background...</span>';
+                }
+
+                const listEl = document.getElementById('credit-credentials-list');
+                const credentials = data.credentials || {};
+                const credArray = Object.values(credentials);
+
+                if (credArray.length === 0) {
+                    listEl.innerHTML = '<p style="text-align: center; color: var(--secondary-color); padding: 2rem;">Credit checker is starting up. Data will appear after first poll (~5 min).</p>';
+                } else {
+                    credArray.sort((a, b) => b.usage_pct - a.usage_pct);
+                    listEl.innerHTML = credArray.map(cred => {
+                        const statusColor = cred.status === 'ok' ? 'var(--success-color)' :
+                                           cred.status === 'warning' ? 'var(--warning-color)' :
+                                           cred.status === 'critical' ? 'var(--error-color)' : 'var(--secondary-color)';
+                        const statusIcon = cred.status === 'ok' ? 'fa-check-circle' :
+                                          cred.status === 'warning' ? 'fa-exclamation-triangle' :
+                                          cred.status === 'critical' ? 'fa-times-circle' : 'fa-question-circle';
+                        const shortId = cred.credential_id.substring(0, 20) + '...';
+                        const barWidth = Math.min(cred.usage_pct, 100);
+                        const barColor = cred.usage_pct > 95 ? 'var(--error-color)' :
+                                        cred.usage_pct > 80 ? 'var(--warning-color)' : 'var(--success-color)';
+                        const checkedAgo = cred.checked_at ? Math.round((Date.now()/1000 - cred.checked_at) / 60) + 'm ago' : 'never';
+
+                        return `
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-light); gap: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0;">
+                                    <i class="fas ${statusIcon}" style="color: ${statusColor}; font-size: 1.1rem;"></i>
+                                    <div style="min-width: 0; flex: 1;">
+                                        <div style="font-weight: 500; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${shortId}</div>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+                                            <div style="flex: 1; height: 6px; background: var(--border-light); border-radius: 3px; overflow: hidden;">
+                                                <div style="width: ${barWidth}%; height: 100%; background: ${barColor}; border-radius: 3px;"></div>
+                                            </div>
+                                            <span style="font-size: 0.7rem; color: var(--secondary-color); white-space: nowrap;">${cred.usage_pct}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 1.5rem; font-size: 0.8rem; color: var(--secondary-color); white-space: nowrap;">
+                                    <div>Used: <strong>${formatTokens(cred.used)}</strong></div>
+                                    <div>Left: <strong style="color: ${statusColor};">${formatTokens(cred.remaining)}</strong></div>
+                                    <div style="font-size: 0.7rem;">${checkedAgo}</div>
+                                </div>
+                                <button onclick="forceCheckCredit('${cred.credential_id}')" class="btn btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;" title="Force Check Now">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                document.getElementById('credit-credentials-list').innerHTML =
+                    `<p style="text-align: center; color: var(--error-color); padding: 2rem;">Failed to load: ${error.message}</p>`;
+            }
+        }
+
+        function formatTokens(n) {
+            if (n === undefined || n === null) return '-';
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+            return String(n);
+        }
+
+        async function forceCheckCredit(credentialId) {
+            try {
+                const url = `/api/health/credits/${encodeURIComponent(credentialId)}/check`;
+                const response = await fetch(url, { method: 'POST', headers: getAuthHeaders() });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                showNotification('Credit check completed', 'success');
+                await loadCreditData();
+            } catch (error) {
+                showNotification(`Failed: ${error.message}`, 'error');
             }
         }
 

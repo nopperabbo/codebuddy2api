@@ -5,6 +5,7 @@ from typing import Optional
 from src.circuit_breaker import CircuitBreakerManager, CircuitState
 from src.health_db import HealthDatabase
 from src.alerting import AlertManager
+from src.credit_checker import credit_checker
 
 health_router = APIRouter(prefix="/api/health", tags=["health"])
 
@@ -98,6 +99,33 @@ async def force_open_circuit(credential_id: str):
     cb = CircuitBreakerManager.get_instance()
     await cb.force_open(credential_id)
     return {"status": "ok", "message": f"Circuit for {credential_id[:8]}... forced open"}
+
+
+@health_router.get("/credits")
+async def get_credits():
+    all_credits = credit_checker.get_all_credits()
+    summary = credit_checker.get_summary()
+    return {
+        "credentials": all_credits,
+        "summary": summary,
+        "timestamp": time.time(),
+    }
+
+
+@health_router.get("/credits/{credential_id}")
+async def get_credential_credit(credential_id: str):
+    credit = credit_checker.get_credit(credential_id)
+    if not credit:
+        raise HTTPException(status_code=404, detail="No credit data for this credential")
+    return credit
+
+
+@health_router.post("/credits/{credential_id}/check")
+async def force_credit_check(credential_id: str):
+    result = await credit_checker.force_check(credential_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Credential not found")
+    return {"status": "ok", "credit": result}
 
 
 @health_router.post("/cleanup")

@@ -17,6 +17,7 @@ from src.health_router import health_router
 from src.circuit_breaker import CircuitBreakerManager
 from src.health_db import HealthDatabase
 from src.alerting import AlertManager
+from src.credit_checker import credit_checker
 
 from config import get_server_host, get_server_port, get_log_level
 
@@ -44,10 +45,14 @@ async def lifespan(app: FastAPI):
     from src import health_monitor
     await health_monitor.startup()
 
+    from src.codebuddy_token_manager import codebuddy_token_manager
+    await credit_checker.start(codebuddy_token_manager)
+
     try:
         await lifecycle_manager.startup()
         yield
     finally:
+        await credit_checker.stop()
         await alert_mgr.stop()
         await lifecycle_manager.shutdown()
         logger.info("CodeBuddy2API Service stopped")

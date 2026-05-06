@@ -12,6 +12,7 @@ import logging
 from typing import Dict, Optional, List, Any, Set
 from .usage_stats_manager import usage_stats_manager
 from .circuit_breaker import CircuitBreakerManager
+from .credit_checker import credit_checker
 
 logger = logging.getLogger(__name__)
 
@@ -496,6 +497,9 @@ class CodeBuddyTokenManager:
                 score *= 1.5
             elif circuit_state["state"] == "half_open":
                 score *= 0.5
+
+            credit_score = credit_checker.get_credit_score(filename)
+            score *= credit_score
 
             if score > best_score:
                 best_score = score
