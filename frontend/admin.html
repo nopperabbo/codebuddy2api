@@ -1341,6 +1341,9 @@
                 <button class="nav-tab" onclick="showTab('settings')">
                     <i class="fas fa-cog"></i> Settings
                 </button>
+                <button class="nav-tab" onclick="showTab('health')">
+                    <i class="fas fa-heartbeat"></i> Health
+                </button>
             </div>
 
             <!-- Dashboard Panel -->
@@ -1745,6 +1748,66 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Health Panel -->
+            <div id="health" class="tab-panel">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: var(--success-color);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="health-closed-count">-</div>
+                            <div class="stat-label">Healthy (Closed)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: var(--warning-color);">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="health-halfopen-count">-</div>
+                            <div class="stat-label">Probing (Half-Open)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: var(--error-color);">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="health-open-count">-</div>
+                            <div class="stat-label">Down (Open)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h3 class="card-title">Circuit Breaker Status</h3>
+                        <button class="btn btn-sm" onclick="loadHealthData()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div id="health-credentials-list">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <div>Loading health data...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h3 class="card-title">Active Alerts</h3>
+                    </div>
+                    <div id="health-alerts-list">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <div>Loading alerts...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -1938,6 +2001,8 @@
                 loadCredentials();
             } else if (tabId === 'settings') {
                 loadSettings();
+            } else if (tabId === 'health') {
+                loadHealthData();
             }
         }
 
@@ -3323,11 +3388,9 @@
            const modelTableBody = document.getElementById('modelUsageTableBody');
            const credentialTableBody = document.getElementById('credentialUsageTableBody');
 
-           // Clear previous data
            modelTableBody.innerHTML = '';
            credentialTableBody.innerHTML = '';
 
-           // Populate Model Usage Table
            if (model_usage && Object.keys(model_usage).length > 0) {
                const sortedModels = Object.entries(model_usage).sort((a, b) => b[1] - a[1]);
                sortedModels.forEach(([model, count]) => {
@@ -3338,7 +3401,6 @@
                modelTableBody.innerHTML = '<tr><td colspan="2" style="text-align: center;">No model usage data yet</td></tr>';
            }
 
-           // Populate Credential Usage Table
            if (credential_usage && Object.keys(credential_usage).length > 0) {
                const sortedCredentials = Object.entries(credential_usage).sort((a, b) => b[1] - a[1]);
                sortedCredentials.forEach(([path, count]) => {
@@ -3350,6 +3412,119 @@
                 credentialTableBody.innerHTML = '<tr><td colspan="2" style="text-align: center;">No credential usage data yet</td></tr>';
            }
        }
+
+        async function loadHealthData() {
+            try {
+                const response = await fetch('/api/health/credentials', { headers: getAuthHeaders() });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+
+                const summary = data.summary || {};
+                document.getElementById('health-closed-count').textContent = summary.states?.closed || 0;
+                document.getElementById('health-halfopen-count').textContent = summary.states?.half_open || 0;
+                document.getElementById('health-open-count').textContent = summary.states?.open || 0;
+
+                const listEl = document.getElementById('health-credentials-list');
+                const credentials = data.credentials || [];
+
+                if (credentials.length === 0) {
+                    listEl.innerHTML = '<p style="text-align: center; color: var(--secondary-color); padding: 2rem;">No credential health data yet. Make some API requests first.</p>';
+                } else {
+                    listEl.innerHTML = credentials.map(cred => {
+                        const stateColor = cred.state === 'closed' ? 'var(--success-color)' :
+                                          cred.state === 'half_open' ? 'var(--warning-color)' : 'var(--error-color)';
+                        const stateIcon = cred.state === 'closed' ? 'fa-check-circle' :
+                                         cred.state === 'half_open' ? 'fa-exclamation-circle' : 'fa-times-circle';
+                        const stateLabel = cred.state === 'closed' ? 'Healthy' :
+                                          cred.state === 'half_open' ? 'Probing' : 'Down';
+                        const shortId = cred.credential_id.substring(0, 20) + '...';
+                        const recoveryInfo = cred.recovery_remaining ?
+                            `<span style="font-size: 0.75rem; color: var(--secondary-color);">Recovery in ${Math.ceil(cred.recovery_remaining)}s</span>` : '';
+
+                        const stats = cred.stats_1h || {};
+                        const successRate = stats.total > 0 ? Math.round((stats.successes / stats.total) * 100) : 100;
+                        const avgLatency = stats.avg_latency ? Math.round(stats.avg_latency) + 'ms' : '-';
+
+                        return `
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-light); gap: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0;">
+                                    <i class="fas ${stateIcon}" style="color: ${stateColor}; font-size: 1.2rem;"></i>
+                                    <div style="min-width: 0;">
+                                        <div style="font-weight: 500; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${shortId}</div>
+                                        <div style="font-size: 0.75rem; color: ${stateColor}; font-weight: 600;">${stateLabel} ${recoveryInfo}</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 1.5rem; font-size: 0.8rem; color: var(--secondary-color);">
+                                    <div>Success: <strong>${successRate}%</strong></div>
+                                    <div>Failures: <strong style="color: ${stats.failures > 0 ? 'var(--error-color)' : 'inherit'};">${stats.failures || 0}</strong></div>
+                                    <div>Latency: <strong>${avgLatency}</strong></div>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button onclick="forceCircuit('${cred.credential_id}', 'close')" class="btn btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.7rem;" title="Force Close (Healthy)">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button onclick="forceCircuit('${cred.credential_id}', 'open')" class="btn btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.7rem; background: var(--error-color); color: white;" title="Force Open (Block)">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                await loadHealthAlerts();
+            } catch (error) {
+                document.getElementById('health-credentials-list').innerHTML =
+                    `<p style="text-align: center; color: var(--error-color); padding: 2rem;">Failed to load: ${error.message}</p>`;
+            }
+        }
+
+        async function loadHealthAlerts() {
+            try {
+                const response = await fetch('/api/health/alerts?active_only=false&limit=20', { headers: getAuthHeaders() });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+
+                const listEl = document.getElementById('health-alerts-list');
+                const alerts = data.alerts || [];
+
+                if (alerts.length === 0) {
+                    listEl.innerHTML = '<p style="text-align: center; color: var(--secondary-color); padding: 1.5rem;">No alerts. All systems healthy.</p>';
+                } else {
+                    listEl.innerHTML = alerts.map(alert => {
+                        const severityColor = alert.severity === 'critical' ? 'var(--error-color)' :
+                                             alert.severity === 'warning' ? 'var(--warning-color)' : 'var(--primary-color)';
+                        const isResolved = alert.resolved_at !== null;
+                        const timeStr = new Date(alert.timestamp * 1000).toLocaleString();
+                        return `
+                            <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border-light); opacity: ${isResolved ? '0.5' : '1'};">
+                                <i class="fas fa-bell" style="color: ${severityColor};"></i>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 0.85rem; font-weight: 500;">${alert.message}</div>
+                                    <div style="font-size: 0.7rem; color: var(--secondary-color);">${timeStr} ${isResolved ? '(resolved)' : ''}</div>
+                                </div>
+                                <span style="font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 0.25rem; background: ${severityColor}; color: white; font-weight: 600;">${alert.severity.toUpperCase()}</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                document.getElementById('health-alerts-list').innerHTML =
+                    `<p style="text-align: center; color: var(--error-color); padding: 1rem;">Failed: ${error.message}</p>`;
+            }
+        }
+
+        async function forceCircuit(credentialId, action) {
+            try {
+                const url = `/api/health/credentials/${encodeURIComponent(credentialId)}/force-${action}`;
+                const response = await fetch(url, { method: 'POST', headers: getAuthHeaders() });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                showNotification(`Circuit ${action === 'close' ? 'closed' : 'opened'} for credential`, 'success');
+                await loadHealthData();
+            } catch (error) {
+                showNotification(`Failed: ${error.message}`, 'error');
+            }
+        }
     </script>
 </body>
 </html>

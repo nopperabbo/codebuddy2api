@@ -13,6 +13,10 @@ from src.codebuddy_router import router as codebuddy_router, lifecycle_manager
 from src.codebuddy_auth_router import router as codebuddy_auth_router
 from src.settings_router import router as settings_router
 from src.frontend_router import router as frontend_router
+from src.health_router import health_router
+from src.circuit_breaker import CircuitBreakerManager
+from src.health_db import HealthDatabase
+from src.alerting import AlertManager
 
 from config import get_server_host, get_server_port, get_log_level
 
@@ -30,10 +34,18 @@ async def lifespan(app: FastAPI):
     global _server_start_time
     _server_start_time = time.time()
     logger.info("Starting CodeBuddy2API Service")
+
+    HealthDatabase.get_instance()
+    cb = CircuitBreakerManager.get_instance()
+    alert_mgr = AlertManager.get_instance()
+    cb.set_on_state_change(alert_mgr.on_state_change)
+    await alert_mgr.start()
+
     try:
         await lifecycle_manager.startup()
         yield
     finally:
+        await alert_mgr.stop()
         await lifecycle_manager.shutdown()
         logger.info("CodeBuddy2API Service stopped")
 
@@ -74,6 +86,11 @@ app.include_router(
     settings_router,
     prefix="/api",
     tags=["Settings Management"]
+)
+
+app.include_router(
+    health_router,
+    tags=["Health & Circuit Breaker"]
 )
 
 

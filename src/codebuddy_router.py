@@ -21,6 +21,8 @@ from .auth import authenticate
 from .codebuddy_api_client import codebuddy_api_client
 from .codebuddy_token_manager import codebuddy_token_manager
 from .usage_stats_manager import usage_stats_manager
+from .circuit_breaker import CircuitBreakerManager
+from .health_db import HealthDatabase, CredentialEvent
 from .keyword_replacer import (
     apply_to_message_content,
     deobfuscate_response,
@@ -961,6 +963,13 @@ async def _attempt_request_with_retry(
                     logger.warning(f"Key {cred_filename} failed with {status}: {error_msg[:200]}, "
                                    f"attempt {attempt + 1}/{MAX_KEY_RETRIES}")
                     usage_stats_manager.record_credential_failure(cred_filename)
+                    cb = CircuitBreakerManager.get_instance()
+                    await cb.record_failure(cred_filename, status_code=status, error=error_msg[:200])
+                    db = HealthDatabase.get_instance()
+                    await db.record_event(CredentialEvent(
+                        timestamp=time.time(), credential_id=cred_filename,
+                        event_type="failure", status_code=status, error=error_msg[:200]
+                    ))
                     if status == 429 and cred_id is not None:
                         await codebuddy_token_manager.mark_key_exhausted(cred_id)
                     if _is_content_filter_error(error_msg) and cred_id is not None:
@@ -974,7 +983,13 @@ async def _attempt_request_with_retry(
                     await stream_response.__aexit__(None, None, None)
                     raise HTTPException(status_code=status, detail=error_msg)
 
-                # Status OK — wrap the already-open stream into a StreamingResponse
+                cb = CircuitBreakerManager.get_instance()
+                await cb.record_success(cred_filename)
+                db = HealthDatabase.get_instance()
+                await db.record_event(CredentialEvent(
+                    timestamp=time.time(), credential_id=cred_filename,
+                    event_type="success", status_code=200
+                ))
                 return await service.handle_stream_response_from_open_stream(
                     response_ctx, stream_response, payload, headers, model=model
                 )
@@ -984,6 +999,13 @@ async def _attempt_request_with_retry(
             except (httpx.TimeoutException, httpx.NetworkError) as e:
                 logger.warning(f"Network error with key {cred_filename}: {e}, attempt {attempt + 1}/{MAX_KEY_RETRIES}")
                 usage_stats_manager.record_credential_failure(cred_filename)
+                cb = CircuitBreakerManager.get_instance()
+                await cb.record_failure(cred_filename, status_code=502, error=str(e)[:200])
+                db = HealthDatabase.get_instance()
+                await db.record_event(CredentialEvent(
+                    timestamp=time.time(), credential_id=cred_filename,
+                    event_type="failure", status_code=502, error=str(e)[:200]
+                ))
                 last_error = HTTPException(status_code=502, detail=str(e))
                 continue
 
@@ -998,6 +1020,13 @@ async def _attempt_request_with_retry(
                     logger.warning(f"Key {cred_filename} failed with {response.status_code}: {error_msg[:200]}, "
                                    f"attempt {attempt + 1}/{MAX_KEY_RETRIES}")
                     usage_stats_manager.record_credential_failure(cred_filename)
+                    cb = CircuitBreakerManager.get_instance()
+                    await cb.record_failure(cred_filename, status_code=response.status_code, error=error_msg[:200])
+                    db = HealthDatabase.get_instance()
+                    await db.record_event(CredentialEvent(
+                        timestamp=time.time(), credential_id=cred_filename,
+                        event_type="failure", status_code=response.status_code, error=error_msg[:200]
+                    ))
                     if response.status_code == 429 and cred_id is not None:
                         await codebuddy_token_manager.mark_key_exhausted(cred_id)
                     if _is_content_filter_error(error_msg) and cred_id is not None:
@@ -1009,7 +1038,6 @@ async def _attempt_request_with_retry(
                     error_msg = response.text
                     raise HTTPException(status_code=response.status_code, detail=error_msg)
 
-                # Parse the SSE response into aggregated result
                 request_start = time.monotonic()
                 aggregator = StreamResponseAggregator()
                 buffer = ""
@@ -1035,6 +1063,14 @@ async def _attempt_request_with_retry(
                 result = aggregator.finalize()
                 if "error" in result:
                     raise HTTPException(status_code=502, detail=result["error"]["message"])
+
+                cb = CircuitBreakerManager.get_instance()
+                await cb.record_success(cred_filename)
+                db = HealthDatabase.get_instance()
+                await db.record_event(CredentialEvent(
+                    timestamp=time.time(), credential_id=cred_filename,
+                    event_type="success", status_code=200, latency_ms=total_time * 1000
+                ))
                 return result
 
             except HTTPException:
@@ -1042,6 +1078,13 @@ async def _attempt_request_with_retry(
             except (httpx.TimeoutException, httpx.NetworkError) as e:
                 logger.warning(f"Network error with key {cred_filename}: {e}, attempt {attempt + 1}/{MAX_KEY_RETRIES}")
                 usage_stats_manager.record_credential_failure(cred_filename)
+                cb = CircuitBreakerManager.get_instance()
+                await cb.record_failure(cred_filename, status_code=502, error=str(e)[:200])
+                db = HealthDatabase.get_instance()
+                await db.record_event(CredentialEvent(
+                    timestamp=time.time(), credential_id=cred_filename,
+                    event_type="failure", status_code=502, error=str(e)[:200]
+                ))
                 last_error = HTTPException(status_code=502, detail=str(e))
                 continue
 

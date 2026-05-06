@@ -11,6 +11,7 @@ import asyncio
 import logging
 from typing import Dict, Optional, List, Any, Set
 from .usage_stats_manager import usage_stats_manager
+from .circuit_breaker import CircuitBreakerManager
 
 logger = logging.getLogger(__name__)
 
@@ -385,7 +386,7 @@ class CodeBuddyTokenManager:
         if not self.credentials:
             return None
 
-        # Filter out expired, exhausted, and disabled credentials
+        cb = CircuitBreakerManager.get_instance()
         valid_credentials = []
         for i, cred in enumerate(self.credentials):
             cid = os.path.basename(cred['file_path'])
@@ -394,6 +395,8 @@ class CodeBuddyTokenManager:
             if self._is_key_exhausted(cid):
                 continue
             if self._is_key_disabled(cid):
+                continue
+            if not cb.is_available(cid):
                 continue
             valid_credentials.append((i, cred))
 
@@ -458,6 +461,7 @@ class CodeBuddyTokenManager:
         return credential['data']
 
     def _pick_healthiest_key(self, valid_credentials: List) -> int:
+        cb = CircuitBreakerManager.get_instance()
         best_index = valid_credentials[0][0]
         best_score = -1
 
@@ -468,11 +472,15 @@ class CodeBuddyTokenManager:
             failed = stats.get('failed_requests', 0)
             last_used = stats.get('last_used_at', 0)
 
-            # Score: prefer keys with fewer total requests (spread load),
-            # fewer failures, and least recently used
             staleness = time.time() - last_used if last_used > 0 else 999999
             failure_rate = failed / max(total, 1)
             score = staleness * (1.0 - failure_rate) / max(total, 1)
+
+            circuit_state = cb.get_circuit_state(filename)
+            if circuit_state["state"] == "closed":
+                score *= 1.5
+            elif circuit_state["state"] == "half_open":
+                score *= 0.5
 
             if score > best_score:
                 best_score = score

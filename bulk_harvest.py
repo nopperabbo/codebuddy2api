@@ -17,6 +17,10 @@ from pathlib import Path
 from typing import Optional, Dict, Any, Tuple, List, Set
 from dataclasses import dataclass, field
 
+import subprocess
+import random
+from urllib.parse import urlparse
+
 import httpx
 from playwright.async_api import async_playwright, Browser, Page, BrowserContext
 from playwright_stealth import Stealth
@@ -50,6 +54,65 @@ RATE_LIMIT_SIGNALS = [
     'unusual activity', 'try again later', 'captcha', 'recaptcha',
     'verify it\'s you', 'too many attempts', 'rate limit', 'blocked',
 ]
+
+STEALTH_INIT_SCRIPT = """
+Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+delete navigator.__proto__.webdriver;
+window.chrome = { runtime: {}, loadTimes: function(){}, csi: function(){} };
+const originalQuery = window.navigator.permissions.query;
+window.navigator.permissions.query = (parameters) => (
+    parameters.name === 'notifications' ?
+        Promise.resolve({ state: Notification.permission }) :
+        originalQuery(parameters)
+);
+Object.defineProperty(navigator, 'plugins', {
+    get: () => [1, 2, 3, 4, 5],
+});
+Object.defineProperty(navigator, 'languages', {
+    get: () => ['en-US', 'en'],
+});
+"""
+
+PROFILES_DIR = Path(__file__).parent / ".browser_profiles"
+PROXIES_FILE = Path(__file__).parent / "proxies.txt"
+
+
+def load_proxies() -> list:
+    if PROXIES_FILE.exists():
+        lines = [l.strip() for l in open(PROXIES_FILE) if l.strip() and not l.startswith('#')]
+        return lines
+    return []
+
+
+def parse_proxy(proxy_url: str) -> Optional[Dict[str, str]]:
+    parsed = urlparse(proxy_url)
+    if not parsed.hostname:
+        return None
+    return {
+        "server": f"{parsed.scheme}://{parsed.hostname}:{parsed.port}",
+        "username": parsed.username or "",
+        "password": parsed.password or "",
+    }
+
+
+def start_xvfb(display: str = ":99") -> Optional[subprocess.Popen]:
+    if sys.platform != 'linux':
+        return None
+    r = subprocess.run(["pgrep", "-f", f"Xvfb {display}"], capture_output=True)
+    if r.returncode == 0:
+        return None
+    try:
+        proc = subprocess.Popen(
+            ["Xvfb", display, "-screen", "0", "1920x1080x24", "-nolisten", "tcp"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        time.sleep(1)
+        os.environ["DISPLAY"] = display
+        logger.info(f"Started Xvfb on {display}")
+        return proc
+    except FileNotFoundError:
+        logger.warning("Xvfb not found, using headless mode")
+        return None
 
 
 @dataclass
@@ -184,6 +247,21 @@ async def google_login(page: Page, email: str, password: str, worker_id: int = 0
         except Exception:
             pass
 
+        current_url = page.url
+        if 'oauthchooseaccount' in current_url or 'accountchooser' in current_url:
+            logger.info(f"[{email}] Account picker detected, selecting account...")
+            await page.evaluate(f"""() => {{
+                const els = document.querySelectorAll('[data-identifier="{email}"], [data-email="{email}"]');
+                for (const el of els) {{ if (el.offsetParent) {{ el.click(); return; }} }}
+                for (const el of document.querySelectorAll('li, div[role="link"], div[tabindex]')) {{
+                    if (el.offsetParent === null) continue;
+                    if ((el.textContent||'').includes('{email}')) {{ el.click(); return; }}
+                }}
+            }}""")
+            await asyncio.sleep(3)
+            if 'codebuddy.ai' in page.url:
+                return True
+
         await page.wait_for_selector('input[type="email"]', timeout=20000)
         await asyncio.sleep(1)
         email_input = page.locator('input[type="email"]')
@@ -243,9 +321,39 @@ async def google_login(page: Page, email: str, password: str, worker_id: int = 0
 
         for _ in range(10):
             await asyncio.sleep(2)
-            if 'codebuddy.ai' in page.url:
+            url = page.url
+
+            if 'codebuddy.ai' in url:
                 logger.info(f"[{email}] Redirected to CodeBuddy")
                 return True
+
+            if 'oauthchooseaccount' in url or 'accountchooser' in url:
+                logger.info(f"[{email}] Account picker in consent loop")
+                await page.evaluate(f"""() => {{
+                    const els = document.querySelectorAll('[data-identifier="{email}"], [data-email="{email}"]');
+                    for (const el of els) {{ if (el.offsetParent) {{ el.click(); return; }} }}
+                    for (const el of document.querySelectorAll('li, div[role="link"], div[tabindex]')) {{
+                        if (el.offsetParent === null) continue;
+                        if ((el.textContent||'').includes('{email}')) {{ el.click(); return; }}
+                    }}
+                }}""")
+                await asyncio.sleep(3)
+                continue
+
+            if any(x in url for x in ['/speedbump', 'consent', '/signin/oauth', 'workspacetermsofservice']):
+                logger.info(f"[{email}] Consent/TOS page: {url.split('/')[-1][:30]}")
+                await page.evaluate("""() => {
+                    const keywords = ['allow', 'continue', 'accept', 'i agree', 'i understand', 'confirm'];
+                    for (const btn of document.querySelectorAll('button, input[type="submit"], div[role="button"]')) {
+                        if (btn.offsetParent === null) continue;
+                        const txt = (btn.value || btn.textContent || '').toLowerCase().trim();
+                        if (keywords.some(k => txt.includes(k))) { btn.click(); return; }
+                    }
+                    const buttons = [...document.querySelectorAll('button')].filter(b => b.offsetParent !== null);
+                    if (buttons.length > 0) buttons[buttons.length - 1].click();
+                }""")
+                await asyncio.sleep(4)
+                continue
 
             for sel in ['#submit_approve_access', 'button:has-text("Allow")', 'button:has-text("Continue")']:
                 try:
@@ -267,21 +375,40 @@ async def google_login(page: Page, email: str, password: str, worker_id: int = 0
         return False
 
 
-async def do_browser_login(browser: Browser, email: str, password: str, worker_id: int = 0) -> Optional[Dict[str, str]]:
-    context = await browser.new_context(
-        user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36',
-        viewport={'width': 1280, 'height': 720},
-        locale='en-US',
-    )
+async def do_browser_login(browser: Browser, email: str, password: str, worker_id: int = 0, proxy: Optional[Dict] = None) -> Optional[Dict[str, str]]:
+    profile_dir = PROFILES_DIR / email.split('@')[0]
+    profile_dir.mkdir(parents=True, exist_ok=True)
+    state_path = profile_dir / "state.json"
+
+    context_opts = {
+        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'viewport': {'width': 1920, 'height': 1080},
+        'locale': 'en-US',
+        'timezone_id': 'Asia/Singapore',
+        'color_scheme': 'light',
+    }
+
+    if state_path.exists():
+        try:
+            context_opts['storage_state'] = str(state_path)
+            logger.info(f"[{email}] Reusing saved browser state")
+        except Exception:
+            pass
+
+    if proxy:
+        context_opts['proxy'] = proxy
+
+    context = await browser.new_context(**context_opts)
 
     stealth = Stealth(
-        navigator_platform_override='MacIntel',
-        webgl_vendor_override='Apple',
-        webgl_renderer_override='Apple M1',
+        navigator_platform_override='Win32',
+        webgl_vendor_override='Google Inc. (NVIDIA)',
+        webgl_renderer_override='ANGLE (NVIDIA, NVIDIA GeForce RTX 3060)',
     )
     await stealth.apply_stealth_async(context)
 
     page = await context.new_page()
+    await page.add_init_script(STEALTH_INIT_SCRIPT)
 
     try:
         # Go to CodeBuddy login page directly
@@ -496,6 +623,12 @@ async def do_browser_login(browser: Browser, email: str, password: str, worker_i
         await asyncio.sleep(3)
         logger.info(f"[{email}] Final page: {codebuddy_page.url[:100]}")
 
+        try:
+            await context.storage_state(path=str(state_path))
+            logger.info(f"[{email}] Browser state saved to {state_path.name}")
+        except Exception:
+            pass
+
         # Now extract ALL cookies (including session cookies set by the SPA)
         cookies = await context.cookies()
         cookie_dict = {}
@@ -664,9 +797,9 @@ async def save_credential_file(email: str, api_key: str, token_data: Optional[Di
         return filepath.name
 
 
-async def harvest_single(browser: Browser, email: str, password: str, worker_id: int = 0) -> Optional[str]:
+async def harvest_single(browser: Browser, email: str, password: str, worker_id: int = 0, proxy: Optional[Dict] = None) -> Optional[str]:
     logger.info(f"[{email}] Step 1/5: Browser Google OAuth")
-    cookies = await do_browser_login(browser, email, password, worker_id)
+    cookies = await do_browser_login(browser, email, password, worker_id, proxy=proxy)
     if not cookies:
         logger.error(f"[{email}] FAILED at browser login")
         return None
@@ -712,9 +845,9 @@ async def harvest_worker(
     retries: int,
     stagger_delay: float,
     worker_id: int,
+    proxies: Optional[List[str]] = None,
 ):
     async with semaphore:
-        # Stagger launch to avoid Google rate-limiting
         if stagger_delay > 0 and worker_id > 0:
             stagger = stagger_delay * (worker_id % 4)
             await asyncio.sleep(stagger)
@@ -722,9 +855,11 @@ async def harvest_worker(
         for attempt in range(1, retries + 1):
             await rate_limit_event.wait()
 
+            proxy = parse_proxy(random.choice(proxies)) if proxies else None
+
             try:
                 logger.info(f"[W{worker_id}] {email} (attempt {attempt}/{retries})")
-                api_key = await harvest_single(browser, email, password, worker_id)
+                api_key = await harvest_single(browser, email, password, worker_id, proxy=proxy)
 
                 if api_key:
                     await stats.record_success(email, api_key)
@@ -759,24 +894,29 @@ async def run_batch(
 
     semaphore = asyncio.Semaphore(args.workers)
 
+    proxies = load_proxies() if args.proxy else []
+    if proxies:
+        logger.info(f"Loaded {len(proxies)} proxies")
+
     async with async_playwright() as p:
+        use_headed = args.headed or args.xvfb
         launch_kwargs = {
-            'headless': not args.headed,
+            'headless': not use_headed,
             'args': [
                 '--disable-blink-features=AutomationControlled',
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
                 '--disable-infobars',
+                '--window-size=1920,1080',
             ],
         }
-        # Prefer real Chrome over Chromium for better Google compatibility
         try:
             browser = await p.chromium.launch(channel='chrome', **launch_kwargs)
-            logger.info("Using real Chrome")
+            logger.info(f"Using real Chrome ({'headed' if use_headed else 'headless'})")
         except Exception:
             browser = await p.chromium.launch(**launch_kwargs)
-            logger.info("Falling back to Chromium")
+            logger.info(f"Falling back to Chromium ({'headed' if use_headed else 'headless'})")
 
         tasks = [
             harvest_worker(
@@ -788,6 +928,7 @@ async def run_batch(
                 retries=args.retries,
                 stagger_delay=args.stagger,
                 worker_id=i,
+                proxies=proxies if proxies else None,
             )
             for i, (email, password) in enumerate(accounts)
         ]
@@ -845,6 +986,8 @@ async def main():
     parser.add_argument('--limit', type=int, default=0, help='Process only N accounts (0=all)')
     parser.add_argument('--no-skip', action='store_true', default=False, help='Process all accounts even if already harvested')
     parser.add_argument('--resume', action='store_true', default=False, help='Resume from last saved state')
+    parser.add_argument('--xvfb', action='store_true', default=False, help='Use Xvfb headed mode on Linux (better stealth)')
+    parser.add_argument('--proxy', action='store_true', default=False, help='Enable proxy rotation from proxies.txt')
     args = parser.parse_args()
 
     accounts_file = Path(args.accounts)
@@ -883,15 +1026,20 @@ async def main():
         logger.info("No accounts to process (all already harvested)")
         sys.exit(0)
 
+    xvfb_proc = None
+    if args.xvfb:
+        xvfb_proc = start_xvfb()
+
     logger.info(f"Accounts to process: {len(accounts)}")
     logger.info(f"Workers: {args.workers} | Retries: {args.retries} | Batch: {args.batch_size}")
-    logger.info(f"Mode: {'headed' if args.headed else 'headless'}")
+    mode = 'xvfb-headed' if args.xvfb else ('headed' if args.headed else 'headless')
+    logger.info(f"Mode: {mode} | Proxy: {'enabled' if args.proxy else 'disabled'}")
 
-    # Clear failed file for fresh run
     if FAILED_FILE.exists() and not args.resume:
         FAILED_FILE.unlink()
 
     CREDS_DIR.mkdir(parents=True, exist_ok=True)
+    PROFILES_DIR.mkdir(parents=True, exist_ok=True)
     stats = HarvestStats(total=len(accounts))
 
     start_time = time.time()
@@ -910,10 +1058,12 @@ async def main():
 
     elapsed = time.time() - start_time
 
-    # Auto-feed proxy
+    if xvfb_proc:
+        xvfb_proc.terminate()
+        logger.info("Xvfb terminated")
+
     await auto_feed_proxy()
 
-    # Cleanup state on full completion
     if stats.failed == 0 and STATE_FILE.exists():
         STATE_FILE.unlink()
 

@@ -139,6 +139,7 @@ harvest_log.txt
 *.har
 .sessions/
 stats.json
+data/
 .mcp_data/
 .opencode-context.md
 config/config.json
