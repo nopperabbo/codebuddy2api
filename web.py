@@ -41,6 +41,9 @@ async def lifespan(app: FastAPI):
     cb.set_on_state_change(alert_mgr.on_state_change)
     await alert_mgr.start()
 
+    from src import health_monitor
+    await health_monitor.startup()
+
     try:
         await lifecycle_manager.startup()
         yield
@@ -127,6 +130,22 @@ async def health_check():
         "disabled_credentials": disabled,
         "server_uptime_seconds": uptime_seconds,
     }
+
+
+@app.get("/health/providers")
+async def provider_health():
+    """Per-provider health status from the background monitor."""
+    from src import health_monitor
+    return health_monitor.get_all_health()
+
+
+@app.get("/logs")
+async def get_request_logs(n: int = 100):
+    """Return last N request log entries (JSONL-backed)."""
+    from src.request_logger import request_logger
+    entries = request_logger.get_recent(n)
+    stats = request_logger.get_stats_summary()
+    return {"stats": stats, "entries": entries}
 
 
 @app.get("/")

@@ -337,6 +337,18 @@ class CodeBuddyTokenManager:
 
     async def mark_key_exhausted(self, credential_id: str):
         async with self._lock:
+            # Check auto-delete setting first
+            try:
+                from config import get_auto_delete_exhausted
+                auto_delete = get_auto_delete_exhausted()
+            except Exception:
+                auto_delete = False
+
+            if auto_delete:
+                logger.warning(f"Auto-deleting exhausted key: {credential_id}")
+                self._delete_credential_unlocked(credential_id)
+                return
+
             self.exhausted_keys[credential_id] = time.time()
             logger.warning(f"Key marked exhausted: {credential_id}, "
                            f"will re-enable after {EXHAUSTION_COOLDOWN_SECONDS // 3600}h")

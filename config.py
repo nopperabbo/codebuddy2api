@@ -28,7 +28,8 @@ _DEFAULT_CONFIG = {
     "CODEBUDDY_LOG_LEVEL": "INFO",
     "CODEBUDDY_MODELS": "claude-4.0,claude-3.7,gpt-5,gpt-5-mini,gpt-5-nano,o4-mini,gemini-2.5-flash,gemini-2.5-pro,auto-chat",
     "CODEBUDDY_ROTATION_COUNT": 1,
-    "CODEBUDDY_PROMPT_ENHANCE": "true"
+    "CODEBUDDY_PROMPT_ENHANCE": "true",
+    "AUTO_DELETE_EXHAUSTED": False,
 }
 
 # --- Core Functions ---
@@ -144,6 +145,20 @@ def get_rotation_count() -> int:
 def get_prompt_enhance_enabled() -> bool:
     val = str(_get_config_value("CODEBUDDY_PROMPT_ENHANCE")).lower()
     return val in ('true', '1', 'yes', 'on')
+
+
+def get_auto_delete_exhausted() -> bool:
+    val = _get_config_value("AUTO_DELETE_EXHAUSTED")
+    if isinstance(val, bool):
+        return val
+    return str(val).lower() in ('true', '1', 'yes', 'on')
+
+
+def get_config() -> Dict[str, Any]:
+    """Return full config as dict (lowercase keys for compatibility)."""
+    return {
+        k.lower(): v for k, v in _config_cache.items()
+    }
 
 # --- Public Setter for Hot-Reload ---
 
