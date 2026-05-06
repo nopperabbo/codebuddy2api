@@ -1,0 +1,15 @@
+{
+  "id": "grok-3",
+  "name": "Grok 3 — xAI Reasoning",
+  "description": "xAI Grok 3. Strong reasoning and real-time knowledge.",
+  "provider": "xai",
+  "model": "grok-3",
+  "maxTokens": 8192,
+  "temperature": 0.3,
+  "apiKeyEnv": "XAI_API_KEY",
+  "endpoint": "https://api.x.ai",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 15
+  }
+}

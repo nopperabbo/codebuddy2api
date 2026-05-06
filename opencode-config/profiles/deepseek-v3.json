@@ -1,0 +1,15 @@
+{
+  "id": "deepseek-v3",
+  "name": "DeepSeek V3 — Cost Effective",
+  "description": "DeepSeek V3. Extremely cost-effective with strong coding capabilities.",
+  "provider": "deepseek",
+  "model": "deepseek-chat",
+  "maxTokens": 8192,
+  "temperature": 0.3,
+  "apiKeyEnv": "DEEPSEEK_API_KEY",
+  "endpoint": "https://api.deepseek.com",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 15
+  }
+}

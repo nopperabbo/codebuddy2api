@@ -1,0 +1,7 @@
+{
+  "name": "cross-model-verify",
+  "version": "1.0.1",
+  "type": "module",
+  "main": "index.mjs",
+  "description": "Sanitizes cross-model metadata (thinking signatures, provider-specific fields) when switching between AI providers to prevent validation errors"
+}

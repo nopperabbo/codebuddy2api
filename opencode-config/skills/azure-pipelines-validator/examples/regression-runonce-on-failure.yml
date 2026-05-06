@@ -1,0 +1,15 @@
+trigger: none
+jobs:
+  - deployment: DeployWeb
+    environment: test
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - script: echo deploy
+        on:
+          failure:
+            steps:
+              - task: CmdLine
+                inputs:
+                  script: echo rollback

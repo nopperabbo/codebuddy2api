@@ -1,0 +1,14 @@
+{
+  "id": "sonnet-4.6",
+  "name": "Sonnet 4.6 — Balanced",
+  "description": "Claude Sonnet. Best balance of quality, speed, and cost.",
+  "provider": "anthropic",
+  "model": "claude-sonnet-4-20250514",
+  "maxTokens": 8192,
+  "temperature": 0.3,
+  "apiKeyEnv": "ANTHROPIC_API_KEY",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 15
+  }
+}

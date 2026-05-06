@@ -1,0 +1,29 @@
+# Edge-case fixture for count_yaml_documents.py
+
+---
+# Comment-only document should not be counted.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: doc-counter-regression
+data:
+  script: |
+    echo start
+    ---
+    echo middle
+    ...
+    echo end
+...
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doc-counter-service
+spec:
+  selector:
+    app: doc-counter-regression
+  ports:
+    - port: 80
+      targetPort: 8080
+...

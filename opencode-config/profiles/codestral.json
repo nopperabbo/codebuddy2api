@@ -1,0 +1,15 @@
+{
+  "id": "codestral",
+  "name": "Codestral — Code Only",
+  "description": "Mistral Codestral. Purpose-built for code generation, completion, and explanation.",
+  "provider": "mistral",
+  "model": "codestral-latest",
+  "maxTokens": 8192,
+  "temperature": 0.2,
+  "apiKeyEnv": "MISTRAL_API_KEY",
+  "endpoint": "https://api.mistral.ai",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 12
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Opencode-DCP/opencode-dynamic-context-pruning/master/dcp.schema.json",
+  "enabled": true,
+  "debug": false,
+  // Show detailed notifications when pruning happens
+  "pruneNotification": "detailed",
+  "pruneNotificationType": "chat",
+
+  // Slash commands (/dcp context, /dcp sweep, etc.)
+  "commands": {
+    "enabled": true,
+    "protectedTools": ["todowrite", "todoread", "task", "skill", "compress", "memory"]
+  },
+
+  // Let AI manage context autonomously (not manual)
+  "manualMode": {
+    "enabled": false,
+    "automaticStrategies": true
+  },
+
+  // Protect last 8 turns from pruning (more aggressive retention for deep sessions)
+  "turnProtection": {
+    "enabled": true,
+    "turns": 8
+  },
+
+  // Enable subagent DCP + custom prompts
+  "experimental": {
+    "allowSubAgents": true,
+    "customPrompts": false
+  },
+
+  // Protect config files and critical project files from being pruned
+  "protectedFilePatterns": [
+    "**/*.config.*",
+    "**/.env*",
+    "**/package.json",
+    "**/tsconfig.json",
+    "**/pyproject.toml",
+    "**/*.jsonc",
+    "**/Cargo.toml",
+    "**/go.mod",
+    "**/requirements.txt",
+    "**/.gitignore",
+    "**/Dockerfile",
+    "**/docker-compose*.yml"
+  ],
+
+  // Compression tuned for 1M context window models
+  "compress": {
+    "mode": "range",
+    "permission": "allow",
+    "showCompression": false,
+    "summaryBuffer": true,
+
+    // Higher limits since we have 1M context on Opus 4.6
+    // Start nudging at 250K, get aggressive at 500K (more headroom)
+    "maxContextLimit": 500000,
+    "minContextLimit": 250000,
+
+    // Per-model overrides for smaller context models
+    "modelMaxLimits": {
+      "enowxlabs/gpt-5.1-codex-max": 300000,
+      "enowxlabs/gpt-5.1-codex": 300000,
+      "enowxlabs/gpt-5.1-codex-mini": 300000,
+      "enowxlabs/gemini-3.1-pro": "60%",
+      "enowxlabs/gemini-3.0-flash": "60%",
+      "enowxlabs/gemini-2.5-pro": "60%",
+      "enowxlabs/gemini-2.5-flash": "60%",
+      "enowxlabs/gpt-5.3-codex": 300000,
+      "enowxlabs/gpt-5.4": 300000,
+      "enowxlabs/gpt-5.2": 300000,
+      "enowxlabs/gpt-5.2-codex": 300000,
+      "enowxlabs/deepseek-3.2": 120000,
+      "enowxlabs/deepseek-3.2-thinking": 120000,
+      "enowxlabs/deepseek-v3-2-volc": 150000,
+      "enowxlabs/qwen3-coder-next": 190000,
+      "enowxlabs/qwen3-coder-next-thinking": 190000,
+      "enowxlabs/kimi-k2.5": 190000,
+      "enowxlabs/minimax-m2.5": 140000,
+      "enowxlabs/minimax-m2.5-thinking": 140000,
+      "enowxlabs/glm-5": 150000,
+      "enowxlabs/glm-5-thinking": 150000,
+      "enowxlabs/claude-sonnet-4": 150000,
+      "enowxlabs/claude-sonnet-4-thinking": 150000,
+      "enowxlabs/claude-sonnet-4.5": 150000,
+      "enowxlabs/claude-sonnet-4.5-thinking": 150000,
+      "enowxlabs/claude-haiku-4.5": 150000,
+      "enowxlabs/claude-haiku-4.5-thinking": 150000,
+      "enowxlabs/claude-opus-4.6": 500000
+    },
+    "modelMinLimits": {
+      "enowxlabs/gpt-5.1-codex-max": 150000,
+      "enowxlabs/gpt-5.1-codex": 150000,
+      "enowxlabs/gpt-5.1-codex-mini": 150000,
+      "enowxlabs/gemini-3.1-pro": "30%",
+      "enowxlabs/gemini-3.0-flash": "30%",
+      "enowxlabs/gemini-2.5-pro": "30%",
+      "enowxlabs/gemini-2.5-flash": "30%",
+      "enowxlabs/gpt-5.3-codex": 150000,
+      "enowxlabs/gpt-5.4": 150000,
+      "enowxlabs/gpt-5.2": 150000,
+      "enowxlabs/gpt-5.2-codex": 150000,
+      "enowxlabs/deepseek-3.2": 60000,
+      "enowxlabs/deepseek-3.2-thinking": 60000,
+      "enowxlabs/deepseek-v3-2-volc": 75000,
+      "enowxlabs/qwen3-coder-next": 95000,
+      "enowxlabs/qwen3-coder-next-thinking": 95000,
+      "enowxlabs/kimi-k2.5": 95000,
+      "enowxlabs/minimax-m2.5": 70000,
+      "enowxlabs/minimax-m2.5-thinking": 70000,
+      "enowxlabs/glm-5": 75000,
+      "enowxlabs/glm-5-thinking": 75000,
+      "enowxlabs/claude-sonnet-4": 75000,
+      "enowxlabs/claude-sonnet-4-thinking": 75000,
+      "enowxlabs/claude-sonnet-4.5": 75000,
+      "enowxlabs/claude-sonnet-4.5-thinking": 75000,
+      "enowxlabs/claude-haiku-4.5": 75000,
+      "enowxlabs/claude-haiku-4.5-thinking": 75000,
+      "enowxlabs/claude-opus-4.6": 250000
+    },
+
+    // Nudge every 3rd fetch when above max (more responsive)
+    "nudgeFrequency": 3,
+    // Start reminders after 10 messages (earlier than default for proactive management)
+    "iterationNudgeThreshold": 10,
+    // Strong nudge = more likely to compress when needed
+    "nudgeForce": "strong",
+
+    // Protect important tool outputs in compression summaries
+    "protectedTools": ["task", "skill", "todowrite", "todoread", "compress"],
+    // Keep user messages intact during compression
+    "protectUserMessages": true
+  },
+
+  // Automatic cleanup strategies
+  "strategies": {
+    "deduplication": {
+      "enabled": true,
+      "protectedTools": ["todowrite", "task", "compress"]
+    },
+    "purgeErrors": {
+      "enabled": true,
+      // Purge error inputs after 2 turns (faster cleanup)
+      "turns": 2,
+      "protectedTools": []
+    },
+    "purgeToolResults": {
+      "enabled": true,
+      // Purge large tool results after 6 turns (balanced for deep refactoring)
+      "turns": 6,
+      "maxSize": 15000,
+      "protectedTools": ["task", "skill", "todowrite", "compress", "memory"]
+    }
+  }
+}

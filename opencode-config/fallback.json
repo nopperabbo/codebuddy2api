@@ -1,0 +1,24 @@
+{
+  "providers": [
+    {
+      "name": "anthropic",
+      "apiKeyEnv": "ANTHROPIC_API_KEY",
+      "healthEndpoint": "https://api.anthropic.com/v1/messages",
+      "priority": 1
+    },
+    {
+      "name": "openai",
+      "apiKeyEnv": "OPENAI_API_KEY",
+      "healthEndpoint": "https://api.openai.com/v1/models",
+      "priority": 2
+    },
+    {
+      "name": "ollama",
+      "apiKeyEnv": "OLLAMA_HOST",
+      "healthEndpoint": "http://localhost:11434/api/tags",
+      "priority": 3
+    }
+  ],
+  "maxRetries": 3,
+  "timeoutMs": 5000
+}

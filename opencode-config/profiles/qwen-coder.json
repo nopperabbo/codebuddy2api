@@ -1,0 +1,15 @@
+{
+  "id": "qwen-coder",
+  "name": "Qwen 2.5 Coder — Local Coding",
+  "description": "Alibaba Qwen 2.5 Coder 32B via Ollama. Strong coding model that runs locally.",
+  "provider": "ollama",
+  "model": "qwen2.5-coder:32b",
+  "maxTokens": 4096,
+  "temperature": 0.2,
+  "apiKeyEnv": null,
+  "endpoint": "http://localhost:11434",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 8
+  }
+}

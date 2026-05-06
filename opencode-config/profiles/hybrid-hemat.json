@@ -1,0 +1,25 @@
+{
+  "id": "hybrid-hemat",
+  "name": "Hybrid Hemat — Cost Optimized",
+  "description": "Automatically routes simple tasks to cheap models, complex tasks to powerful models.",
+  "provider": "auto",
+  "routing": {
+    "simple": {
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "maxTokens": 2048
+    },
+    "complex": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-20250514",
+      "maxTokens": 8192
+    }
+  },
+  "temperature": 0.3,
+  "apiKeyEnv": ["OPENAI_API_KEY", "ANTHROPIC_API_KEY"],
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 10,
+    "aggressiveSummarization": true
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "speed",
+  "name": "Speed — Fastest Response",
+  "description": "Fastest available model for rapid iteration and quick answers.",
+  "provider": "openai",
+  "model": "gpt-4o-mini",
+  "maxTokens": 4096,
+  "temperature": 0.3,
+  "apiKeyEnv": "OPENAI_API_KEY",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 8
+  }
+}

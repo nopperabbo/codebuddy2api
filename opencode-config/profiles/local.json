@@ -1,0 +1,15 @@
+{
+  "id": "local",
+  "name": "Local — Offline/Privacy",
+  "description": "Uses Ollama for local model inference. No data leaves your machine.",
+  "provider": "ollama",
+  "model": "codellama:13b",
+  "maxTokens": 4096,
+  "temperature": 0.3,
+  "apiKeyEnv": null,
+  "endpoint": "http://localhost:11434",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 8
+  }
+}

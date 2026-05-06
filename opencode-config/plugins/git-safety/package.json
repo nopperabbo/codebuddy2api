@@ -1,0 +1,7 @@
+{
+  "name": "git-safety",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.mjs",
+  "description": "Blocks destructive git commands — force push, hard reset, clean -fd, etc."
+}

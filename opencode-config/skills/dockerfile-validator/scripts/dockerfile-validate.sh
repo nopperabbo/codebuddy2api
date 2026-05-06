@@ -1,0 +1,699 @@
+#!/bin/bash
+
+################################################################################
+# Dockerfile Validator - Complete Lifecycle Management
+#
+# Single self-contained script that handles:
+# - Tool installation (hadolint + Checkov in Python venvs)
+# - Syntax validation (hadolint)
+# - Security scanning (Checkov)
+# - Best practices validation (custom checks)
+# - Optimization analysis (custom checks)
+# - Automatic cleanup on exit (success or failure)
+#
+# Usage: ./dockerfile-validate.sh [Dockerfile]
+################################################################################
+
+set -euo pipefail
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+PURPLE='\033[0;35m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+# Configuration
+DOCKERFILE="${1:-Dockerfile}"
+VENV_BASE_DIR=""
+HADOLINT_VENV=""
+CHECKOV_VENV=""
+TEMP_INSTALL=false
+HADOLINT_CMD=""
+CHECKOV_CMD=""
+HADOLINT_MISSING=false
+CHECKOV_MISSING=false
+
+# Environment variable to force temporary installation (for testing cleanup)
+# Usage: FORCE_TEMP_INSTALL=true bash scripts/dockerfile-validate.sh Dockerfile
+FORCE_TEMP_INSTALL="${FORCE_TEMP_INSTALL:-false}"
+
+# Exit codes
+EXIT_CODE=0
+
+# Counters for custom checks
+BP_ERRORS=0
+BP_WARNINGS=0
+BP_INFO=0
+BP_HAS_WARNINGS=false   # set true when BP has warnings but no errors (drives WARN summary state)
+RUN_COUNT=0
+
+################################################################################
+# Cleanup Function - Called on EXIT
+################################################################################
+cleanup() {
+    local exit_code=$?
+
+    if [ "$TEMP_INSTALL" = true ] && [ -n "$VENV_BASE_DIR" ]; then
+        echo ""
+        echo -e "${YELLOW}Cleaning up temporary installation...${NC}"
+
+        if [ -d "$VENV_BASE_DIR" ]; then
+            rm -rf "$VENV_BASE_DIR"
+            echo -e "${GREEN}✓ Removed temporary venvs${NC}"
+        fi
+
+        echo -e "${GREEN}✓ Cleanup complete${NC}"
+    fi
+
+    exit $exit_code
+}
+
+# Set trap for cleanup on any exit
+trap cleanup EXIT INT TERM
+
+################################################################################
+# Tool Installation Functions
+################################################################################
+
+check_python() {
+    if command -v python3 &> /dev/null; then
+        PYTHON_CMD="python3"
+    elif command -v python &> /dev/null; then
+        PYTHON_CMD="python"
+    else
+        echo -e "${RED}ERROR: Python 3 is required but not installed${NC}" >&2
+        exit 2
+    fi
+
+    # Verify Python version (need 3.8+)
+    PYTHON_VERSION=$($PYTHON_CMD --version 2>&1 | awk '{print $2}')
+    MAJOR=$(echo $PYTHON_VERSION | cut -d. -f1)
+    MINOR=$(echo $PYTHON_VERSION | cut -d. -f2)
+
+    if [ "$MAJOR" -lt 3 ] || ([ "$MAJOR" -eq 3 ] && [ "$MINOR" -lt 8 ]); then
+        echo -e "${RED}ERROR: Python 3.8+ required (found $PYTHON_VERSION)${NC}" >&2
+        exit 2
+    fi
+}
+
+check_tools() {
+    # If FORCE_TEMP_INSTALL is set, skip tool check and force installation
+    if [ "$FORCE_TEMP_INSTALL" = "true" ]; then
+        echo -e "${YELLOW}FORCE_TEMP_INSTALL=true: Forcing temporary tool installation for testing${NC}"
+        HADOLINT_MISSING=true
+        CHECKOV_MISSING=true
+        return 1
+    fi
+
+    HADOLINT_MISSING=false
+    CHECKOV_MISSING=false
+
+    # Check for hadolint (system-installed)
+    if command -v hadolint &> /dev/null; then
+        HADOLINT_CMD="hadolint"
+    else
+        HADOLINT_MISSING=true
+    fi
+
+    # Check for Checkov (system-installed)
+    if command -v checkov &> /dev/null; then
+        CHECKOV_CMD="checkov"
+    else
+        CHECKOV_MISSING=true
+    fi
+
+    # Return 0 if both found, 1 if installation needed
+    [ "$HADOLINT_MISSING" = false ] && [ "$CHECKOV_MISSING" = false ]
+}
+
+install_hadolint() {
+    echo -e "${BLUE}Installing hadolint...${NC}"
+
+    mkdir -p "$HADOLINT_VENV"
+    $PYTHON_CMD -m venv "$HADOLINT_VENV" 2>&1 | grep -v "upgrade pip" || true
+
+    "$HADOLINT_VENV/bin/pip" install --quiet --upgrade pip
+    "$HADOLINT_VENV/bin/pip" install --quiet hadolint-bin
+
+    if "$HADOLINT_VENV/bin/hadolint" --version &> /dev/null; then
+        HADOLINT_CMD="$HADOLINT_VENV/bin/hadolint"
+        VERSION=$("$HADOLINT_VENV/bin/hadolint" --version | head -n1)
+        echo -e "${GREEN}✓ hadolint installed: $VERSION${NC}"
+    else
+        echo -e "${RED}✗ hadolint installation failed${NC}" >&2
+        exit 2
+    fi
+}
+
+install_checkov() {
+    echo -e "${BLUE}Installing Checkov...${NC}"
+
+    mkdir -p "$CHECKOV_VENV"
+    $PYTHON_CMD -m venv "$CHECKOV_VENV" 2>&1 | grep -v "upgrade pip" || true
+
+    "$CHECKOV_VENV/bin/pip" install --quiet --upgrade pip
+    "$CHECKOV_VENV/bin/pip" install --quiet checkov
+
+    if "$CHECKOV_VENV/bin/checkov" --version &> /dev/null; then
+        CHECKOV_CMD="$CHECKOV_VENV/bin/checkov"
+        VERSION=$("$CHECKOV_VENV/bin/checkov" --version 2>&1)
+        echo -e "${GREEN}✓ Checkov installed: $VERSION${NC}"
+    else
+        echo -e "${RED}✗ Checkov installation failed${NC}" >&2
+        exit 2
+    fi
+}
+
+install_tools() {
+    if [ "$HADOLINT_MISSING" = false ] && [ "$CHECKOV_MISSING" = false ]; then
+        return 0
+    fi
+
+    echo -e "${YELLOW}${BOLD}Installing validation tools...${NC}"
+    echo ""
+
+    TEMP_INSTALL=true
+    VENV_BASE_DIR=$(mktemp -d "${TMPDIR:-/tmp}/dockerfile-validator.XXXXXX")
+    HADOLINT_VENV="${VENV_BASE_DIR}/hadolint-venv"
+    CHECKOV_VENV="${VENV_BASE_DIR}/checkov-venv"
+
+    check_python
+
+    if [ "$HADOLINT_MISSING" = true ]; then
+        install_hadolint
+    fi
+
+    if [ "$CHECKOV_MISSING" = true ]; then
+        install_checkov
+    fi
+
+    echo ""
+}
+
+################################################################################
+# Dockerfile Preprocessing - Handle Multi-line Instructions
+################################################################################
+
+# Normalize Dockerfile by joining continuation lines (lines ending with \)
+# This allows accurate counting of multi-line instructions
+normalize_dockerfile() {
+    local dockerfile="$1"
+    # Use awk to join lines that end with backslash
+    awk '
+        /\\$/ {
+            sub(/\\$/, "")
+            printf "%s", $0
+            next
+        }
+        { print }
+    ' "$dockerfile"
+}
+
+count_instruction() {
+    local content="$1"
+    local instruction="$2"
+
+    printf '%s\n' "$content" | awk -v instruction="$instruction" '
+        BEGIN { IGNORECASE=1 }
+        $0 ~ "^[[:space:]]*" instruction "[[:space:]]" { count++ }
+        END { print count + 0 }
+    '
+}
+
+from_images() {
+    local content="$1"
+
+    printf '%s\n' "$content" | awk '
+        BEGIN { IGNORECASE=1 }
+        function parse_from_image(line, n, token, i) {
+            sub(/^[[:space:]]*FROM[[:space:]]+/, "", line)
+            sub(/[[:space:]]+#.*/, "", line)
+            n = split(line, token, /[[:space:]]+/)
+
+            i = 1
+            while (i <= n && token[i] ~ /^--/) {
+                # Handle both --platform=<value> and --platform <value> forms.
+                if (token[i] == "--platform" && i < n) {
+                    i += 2
+                    continue
+                }
+                i++
+            }
+
+            if (i <= n) {
+                return token[i]
+            }
+
+            return ""
+        }
+
+        /^[[:space:]]*FROM[[:space:]]+/ {
+            image = parse_from_image($0)
+            if (image != "") {
+                print image
+            }
+        }
+    '
+}
+
+final_from_image() {
+    local content="$1"
+
+    from_images "$content" | tail -n1
+}
+
+is_nonroot_base_image() {
+    local image="$1"
+
+    if echo "$image" | grep -qiE 'distroless[^[:space:]]*:nonroot|:nonroot$'; then
+        return 0
+    fi
+
+    return 1
+}
+
+################################################################################
+# Validation Functions
+################################################################################
+
+run_hadolint() {
+    echo -e "${CYAN}${BOLD}[1/4] Syntax Validation (hadolint)${NC}"
+    echo "====================================="
+    echo ""
+
+    if "$HADOLINT_CMD" "$DOCKERFILE" 2>&1; then
+        echo ""
+        echo -e "${GREEN}✓ Syntax validation passed${NC}"
+        return 0
+    else
+        local hadolint_exit=$?
+        echo ""
+        echo -e "${YELLOW}⚠ Syntax issues found${NC}"
+        EXIT_CODE=1
+        return $hadolint_exit
+    fi
+}
+
+run_checkov() {
+    echo -e "${CYAN}${BOLD}[2/4] Security Scan (Checkov)${NC}"
+    echo "================================"
+    echo ""
+
+    if "$CHECKOV_CMD" -f "$DOCKERFILE" --framework dockerfile --compact 2>&1; then
+        echo ""
+        echo -e "${GREEN}✓ Security scan passed${NC}"
+        return 0
+    else
+        local checkov_exit=$?
+        echo ""
+        echo -e "${YELLOW}⚠ Security issues found${NC}"
+        EXIT_CODE=1
+        return $checkov_exit
+    fi
+}
+
+run_best_practices() {
+    echo -e "${CYAN}${BOLD}[3/4] Best Practices Validation${NC}"
+    echo "===================================="
+    echo ""
+
+    # Reset counters
+    BP_ERRORS=0
+    BP_WARNINGS=0
+    BP_INFO=0
+
+    # Create normalized version for accurate multi-line instruction counting
+    local normalized_content
+    normalized_content=$(normalize_dockerfile "$DOCKERFILE")
+    local final_image
+    final_image=$(final_from_image "$normalized_content")
+
+    # Check for :latest tag
+    if grep -qiE "^[[:space:]]*FROM[[:space:]]+[^[:space:]]+:latest([[:space:]]|$)" "$DOCKERFILE"; then
+        echo -e "${YELLOW}[WARNING] Base image using :latest tag${NC}"
+        echo "  → Use specific version tags for reproducibility"
+        ((BP_WARNINGS++))
+    fi
+
+    # Check for USER directive
+    if ! grep -qiE "^[[:space:]]*USER[[:space:]]+" "$DOCKERFILE"; then
+        if is_nonroot_base_image "$final_image"; then
+            echo -e "${PURPLE}[INFO] No USER directive, but final base image is non-root: $final_image${NC}"
+            echo "  → Confirm runtime user requirements for your platform"
+            ((BP_INFO++))
+        else
+            echo -e "${YELLOW}[WARNING] No USER directive - container will run as root${NC}"
+            echo "  → Add 'USER <non-root-user>' before CMD/ENTRYPOINT"
+            ((BP_WARNINGS++))
+        fi
+    else
+        LAST_USER=$(grep -iE "^[[:space:]]*USER[[:space:]]+" "$DOCKERFILE" | tail -n1 | awk '{print $2}')
+        LAST_USER_LOWER=$(echo "$LAST_USER" | tr '[:upper:]' '[:lower:]')
+        if [[ "$LAST_USER_LOWER" == "root" ]] || [[ "$LAST_USER" == "0" ]] || [[ "$LAST_USER" == "0:0" ]]; then
+            echo -e "${RED}[ERROR] Last USER directive sets user to root${NC}"
+            echo "  → Container should not run as root user"
+            ((BP_ERRORS++))
+            EXIT_CODE=1
+        fi
+    fi
+
+    # Check for HEALTHCHECK
+    if ! grep -qiE "^[[:space:]]*HEALTHCHECK[[:space:]]+" "$DOCKERFILE"; then
+        if grep -qiE "^[[:space:]]*EXPOSE[[:space:]]+|^[[:space:]]*(CMD|ENTRYPOINT)[[:space:]].*server" "$DOCKERFILE"; then
+            echo -e "${PURPLE}[INFO] No HEALTHCHECK defined for service container${NC}"
+            echo "  → Consider adding HEALTHCHECK for monitoring"
+            ((BP_INFO++))
+        fi
+    fi
+
+    # Check RUN command efficiency (using normalized content for accurate counting)
+    RUN_COUNT=$(count_instruction "$normalized_content" "RUN")
+    if [ "$RUN_COUNT" -gt "5" ]; then
+        echo -e "${PURPLE}[INFO] High number of RUN commands ($RUN_COUNT)${NC}"
+        echo "  → Consider combining related commands to reduce layers"
+        ((BP_INFO++))
+    fi
+
+    # Check for apt-get cache cleanup (must happen in same RUN instruction)
+    APT_INSTALL_WITHOUT_CLEAN=$(printf '%s\n' "$normalized_content" | awk '
+        BEGIN { IGNORECASE=1 }
+        /^[[:space:]]*RUN[[:space:]]+/ && /apt-get[[:space:]]+install/ {
+            has_clean = ($0 ~ /rm[[:space:]]+-rf[[:space:]]+\/var\/lib\/apt\/lists/ || $0 ~ /apt-get[[:space:]]+clean/)
+            if (!has_clean) { count++ }
+        }
+        END { print count + 0 }
+    ')
+
+    if [ "$APT_INSTALL_WITHOUT_CLEAN" -gt 0 ]; then
+        echo -e "${YELLOW}[WARNING] apt-get install found without same-layer cache cleanup${NC}"
+        echo "  → Add '&& rm -rf /var/lib/apt/lists/*' to the same RUN instruction"
+        ((BP_WARNINGS++))
+    fi
+
+    # Check for apk --no-cache (using normalized content)
+    APK_ADD_WITHOUT_NOCACHE=$(printf '%s\n' "$normalized_content" | awk '
+        BEGIN { IGNORECASE=1 }
+        /^[[:space:]]*RUN[[:space:]]+/ && /apk[[:space:]]+add/ {
+            has_no_cache = ($0 ~ /apk[[:space:]]+add[^#]*--no-cache/)
+            has_manual_cleanup = ($0 ~ /rm[[:space:]]+-rf[[:space:]]+\/var\/cache\/apk/)
+            if (!has_no_cache && !has_manual_cleanup) { count++ }
+        }
+        END { print count + 0 }
+    ')
+
+    if [ "$APK_ADD_WITHOUT_NOCACHE" -gt 0 ]; then
+        echo -e "${YELLOW}[WARNING] apk add without --no-cache or manual cache cleanup${NC}"
+        echo "  → Use 'apk add --no-cache' to avoid cache in image"
+        ((BP_WARNINGS++))
+    fi
+
+    # Check for hardcoded secrets (ignore comments)
+    # Use tolower() instead of IGNORECASE=1 for ~ operator: BSD awk (macOS) does not
+    # honour IGNORECASE when using the dynamic ~ operator, only for literal /patterns/.
+    # Dockerfile convention is UPPERCASE variable names (ENV PASSWORD=, ENV API_KEY=),
+    # so without tolower() all secrets are silently missed on macOS.
+    if awk '
+        /^[[:space:]]*#/ { next }
+        /^[[:space:]]*(ENV|ARG)[[:space:]]/ {
+            lower = tolower($0)
+            if (lower ~ /(password|secret|api_key|api-key|apikey|token)[[:space:]]*=/) {
+                found=1
+            }
+        }
+        END { exit found ? 0 : 1 }
+    ' "$DOCKERFILE"; then
+        echo -e "${RED}[ERROR] Potential hardcoded secrets in ENV/ARG${NC}"
+        echo "  → Never hardcode secrets in Dockerfiles"
+        ((BP_ERRORS++))
+        EXIT_CODE=1
+    fi
+
+    # Check for poor COPY ordering (COPY . before dependency installation)
+    # This hurts build cache efficiency - dependencies should be copied first.
+    # Stage-aware: resets tracking on each FROM so a COPY . in a builder stage
+    # does not produce a false positive against installs in a separate runtime stage.
+    COPY_ORDER_ISSUE=$(printf '%s\n' "$normalized_content" | awk '
+        {
+            lower = tolower($0)
+
+            # New build stage — reset per-stage COPY . tracking
+            if (lower ~ /^[[:space:]]*from[[:space:]]+/) {
+                stage_copy_line = 0
+                next
+            }
+
+            # Skip comment lines
+            if (lower ~ /^[[:space:]]*#/) { next }
+
+            # Record the first COPY . in the current stage (ignore COPY --from=)
+            if (stage_copy_line == 0 && lower ~ /^[[:space:]]*copy[[:space:]]+/) {
+                stripped = lower
+                sub(/^[[:space:]]*copy[[:space:]]+/, "", stripped)
+                while (stripped ~ /^--[^[:space:]]+[[:space:]]+/) {
+                    sub(/^--[^[:space:]]+[[:space:]]+/, "", stripped)
+                }
+                split(stripped, parts, /[[:space:]]+/)
+                if (parts[1] == "." || parts[1] == "./") {
+                    stage_copy_line = NR
+                }
+            }
+
+            # Flag if a package install follows COPY . within the same stage
+            if (stage_copy_line > 0 && NR > stage_copy_line && lower ~ /^[[:space:]]*run[[:space:]]+/) {
+                if (lower ~ /pip[[:space:]]+install|npm[[:space:]]+(install|ci)|yarn([[:space:]]|$)|go[[:space:]]+mod[[:space:]]|apt-get[[:space:]]+install|apk[[:space:]]+add/) {
+                    found = 1
+                    exit
+                }
+            }
+        }
+        END { print found + 0 }
+    ')
+
+    if [ "$COPY_ORDER_ISSUE" -gt 0 ]; then
+        echo -e "${YELLOW}[WARNING] COPY . appears before dependency installation${NC}"
+        echo "  → Copy dependency files (package.json, requirements.txt) first for better cache"
+        echo "  → Then install dependencies, then COPY . for source code"
+        ((BP_WARNINGS++))
+    fi
+
+    echo ""
+    echo "Best Practices Summary:"
+    echo -e "  Errors:   ${RED}$BP_ERRORS${NC}"
+    echo -e "  Warnings: ${YELLOW}$BP_WARNINGS${NC}"
+    echo -e "  Info:     ${PURPLE}$BP_INFO${NC}"
+    echo ""
+
+    if [ $BP_ERRORS -eq 0 ] && [ $BP_WARNINGS -eq 0 ]; then
+        echo -e "${GREEN}✓ Best practices validation passed${NC}"
+        return 0
+    elif [ $BP_ERRORS -eq 0 ]; then
+        echo -e "${YELLOW}⚠ Best practices completed with warnings${NC}"
+        BP_HAS_WARNINGS=true
+        return 0
+    else
+        echo -e "${RED}✗ Best practices validation failed${NC}"
+        return 1
+    fi
+}
+
+run_optimization() {
+    echo -e "${CYAN}${BOLD}[4/4] Optimization Analysis${NC}"
+    echo "=============================="
+    echo ""
+
+    # Create normalized version for accurate multi-line instruction counting
+    local normalized_content
+    normalized_content=$(normalize_dockerfile "$DOCKERFILE")
+
+    # Analyze base images
+    BASE_IMAGES=$(from_images "$normalized_content")
+
+    echo -e "${BLUE}Base Image Analysis:${NC}"
+    for image in $BASE_IMAGES; do
+        if echo "$image" | grep -qi "distroless"; then
+            continue
+        fi
+
+        if echo "$image" | grep -qiE "ubuntu|debian|centos|fedora"; then
+            echo -e "  ${PURPLE}[OPTIMIZATION] Consider Alpine alternative for: $image${NC}"
+            echo "    → Alpine images are 10-100x smaller"
+        fi
+    done
+    echo ""
+
+    # Multi-stage analysis (using normalized content)
+    FROM_COUNT=$(count_instruction "$normalized_content" "FROM")
+
+    echo -e "${BLUE}Build Structure:${NC}"
+    if [ "$FROM_COUNT" -eq "1" ]; then
+        if echo "$normalized_content" | grep -qiE "apt-get install.*(gcc|make|build)" || \
+           echo "$normalized_content" | grep -qiE "apk add.*(gcc|make|build)"; then
+            echo -e "  ${PURPLE}[OPTIMIZATION] Build tools detected in single-stage build${NC}"
+            echo "    → Consider multi-stage build to exclude build tools from final image"
+        fi
+    else
+        FINAL_FROM=$(final_from_image "$normalized_content")
+        if echo "$FINAL_FROM" | grep -qiE "distroless|alpine|scratch"; then
+            echo -e "  ${GREEN}✓ Using minimal base for final stage: $FINAL_FROM${NC}"
+        else
+            echo -e "  ${PURPLE}[OPTIMIZATION] Final stage could use smaller base image${NC}"
+            echo "    → Consider: alpine, distroless, or scratch"
+        fi
+    fi
+    echo ""
+
+    # Layer count (reuse RUN_COUNT from best practices if available, otherwise calculate)
+    RUN_COUNT=$(count_instruction "$normalized_content" "RUN")
+
+    echo -e "${BLUE}Layer Optimization:${NC}"
+    echo "  RUN commands: $RUN_COUNT"
+    if [ "$RUN_COUNT" -gt "7" ]; then
+        echo -e "  ${PURPLE}[OPTIMIZATION] Consider combining RUN commands${NC}"
+        echo "    → Reduces layer count and image size"
+    fi
+    echo ""
+
+    # .dockerignore check
+    DOCKERFILE_DIR=$(dirname "$DOCKERFILE")
+    if [ ! -f "$DOCKERFILE_DIR/.dockerignore" ]; then
+        echo -e "${YELLOW}[INFO] No .dockerignore file found${NC}"
+        echo "  → Create .dockerignore to optimize build context"
+        echo ""
+    fi
+
+    echo -e "${GREEN}✓ Optimization analysis complete${NC}"
+    return 0
+}
+
+################################################################################
+# Main Execution
+################################################################################
+
+show_help() {
+    # Use echo -e so that BOLD/NC variables (which hold \033[...m escape sequences)
+    # are interpreted correctly. cat << EOF expands variables but does not process
+    # \033 escape sequences, causing raw escape codes to appear in the output.
+    echo -e "${BOLD}Dockerfile Validator - Complete Lifecycle${NC}"
+    echo ""
+    echo "Validates Dockerfiles with automatic tool management and cleanup."
+    echo ""
+    echo -e "${BOLD}Usage:${NC}"
+    echo "    $(basename "$0") [Dockerfile]"
+    echo ""
+    echo -e "${BOLD}Validation Stages:${NC}"
+    echo "    1. Syntax validation (hadolint)"
+    echo "    2. Security scanning (Checkov)"
+    echo "    3. Best practices validation"
+    echo "    4. Optimization analysis"
+    echo ""
+    echo -e "${BOLD}Features:${NC}"
+    echo "    • Auto-installs tools if not found"
+    echo "    • Runs all validation stages"
+    echo "    • Auto-cleanup on exit"
+    echo ""
+    echo -e "${BOLD}Examples:${NC}"
+    echo "    $(basename "$0")                    # Validate ./Dockerfile"
+    echo "    $(basename "$0") Dockerfile.prod    # Validate specific file"
+    echo ""
+    echo -e "${BOLD}Exit Codes:${NC}"
+    echo "    0    All validations passed"
+    echo "    1    One or more validations failed"
+    echo "    2    Critical error"
+    echo ""
+}
+
+# Check for help
+ARG1="${1:-}"
+if [[ "$ARG1" == "-h" ]] || [[ "$ARG1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+
+# Validate input
+if [ ! -f "$DOCKERFILE" ]; then
+    echo -e "${RED}ERROR: Dockerfile not found: $DOCKERFILE${NC}" >&2
+    echo ""
+    echo "Usage: $(basename "$0") [Dockerfile]"
+    exit 2
+fi
+
+# Print header
+echo ""
+echo -e "${CYAN}${BOLD}========================================${NC}"
+echo -e "${CYAN}${BOLD}  Dockerfile Validator${NC}"
+echo -e "${CYAN}${BOLD}========================================${NC}"
+echo ""
+echo -e "${BOLD}Target:${NC} $DOCKERFILE"
+echo -e "${BOLD}Date:${NC}   $(date '+%Y-%m-%d %H:%M:%S')"
+echo ""
+
+# Check and install tools if needed
+if ! check_tools; then
+    install_tools
+fi
+
+echo -e "${CYAN}${BOLD}Running Validations...${NC}"
+echo ""
+
+# Track results
+HADOLINT_RESULT="SKIP"
+CHECKOV_RESULT="SKIP"
+BEST_PRACTICES_RESULT="SKIP"
+OPTIMIZATION_RESULT="SKIP"
+
+# Run all validations
+run_hadolint && HADOLINT_RESULT="PASS" || HADOLINT_RESULT="FAIL"
+echo ""
+
+run_checkov && CHECKOV_RESULT="PASS" || CHECKOV_RESULT="FAIL"
+echo ""
+
+run_best_practices && {
+    [ "$BP_HAS_WARNINGS" = true ] && BEST_PRACTICES_RESULT="WARN" || BEST_PRACTICES_RESULT="PASS"
+} || BEST_PRACTICES_RESULT="FAIL"
+echo ""
+
+run_optimization && OPTIMIZATION_RESULT="INFO"
+echo ""
+
+# Print summary
+echo -e "${CYAN}${BOLD}========================================${NC}"
+echo -e "${CYAN}${BOLD}  Validation Summary${NC}"
+echo -e "${CYAN}${BOLD}========================================${NC}"
+echo ""
+
+# Print results
+[ "$HADOLINT_RESULT" = "PASS" ] && echo -e "  Syntax (hadolint):     ${GREEN}✓ PASSED${NC}" || echo -e "  Syntax (hadolint):     ${RED}✗ FAILED${NC}"
+[ "$CHECKOV_RESULT" = "PASS" ] && echo -e "  Security (Checkov):    ${GREEN}✓ PASSED${NC}" || echo -e "  Security (Checkov):    ${RED}✗ FAILED${NC}"
+if [ "$BEST_PRACTICES_RESULT" = "PASS" ]; then
+    echo -e "  Best Practices:        ${GREEN}✓ PASSED${NC}"
+elif [ "$BEST_PRACTICES_RESULT" = "WARN" ]; then
+    echo -e "  Best Practices:        ${YELLOW}⚠ WARNED${NC}"
+else
+    echo -e "  Best Practices:        ${RED}✗ FAILED${NC}"
+fi
+echo -e "  Optimization:          ${BLUE}ℹ INFORMATIONAL${NC}"
+
+echo ""
+echo -e "${CYAN}${BOLD}========================================${NC}"
+echo ""
+
+# Overall result
+if [ $EXIT_CODE -eq 0 ]; then
+    echo -e "${GREEN}${BOLD}✓ Overall Result: PASSED${NC}"
+    echo ""
+    echo "Your Dockerfile meets validation requirements."
+else
+    echo -e "${RED}${BOLD}✗ Overall Result: FAILED${NC}"
+    echo ""
+    echo "Please address the issues identified above."
+fi
+
+echo ""
+
+# Exit (cleanup trap will run automatically)
+exit $EXIT_CODE

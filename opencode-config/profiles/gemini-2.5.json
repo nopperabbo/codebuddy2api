@@ -1,0 +1,14 @@
+{
+  "id": "gemini-2.5",
+  "name": "Gemini 2.5 Pro — Google's Best",
+  "description": "Google Gemini 2.5 Pro. Excellent reasoning and long context window (1M tokens).",
+  "provider": "google",
+  "model": "gemini-2.5-pro-preview-05-06",
+  "maxTokens": 8192,
+  "temperature": 0.3,
+  "apiKeyEnv": "GOOGLE_API_KEY",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 20
+  }
+}

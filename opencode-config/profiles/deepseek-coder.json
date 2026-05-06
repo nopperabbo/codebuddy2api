@@ -1,0 +1,15 @@
+{
+  "id": "deepseek-coder",
+  "name": "DeepSeek Coder — Coding Specialist",
+  "description": "DeepSeek Coder V2. Specialized for code generation and understanding.",
+  "provider": "deepseek",
+  "model": "deepseek-coder",
+  "maxTokens": 8192,
+  "temperature": 0.2,
+  "apiKeyEnv": "DEEPSEEK_API_KEY",
+  "endpoint": "https://api.deepseek.com",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 12
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "gemini-flash",
+  "name": "Gemini Flash — Ultra Fast",
+  "description": "Google Gemini 2.5 Flash. Extremely fast and cheap, good for simple tasks.",
+  "provider": "google",
+  "model": "gemini-2.5-flash-preview-05-20",
+  "maxTokens": 4096,
+  "temperature": 0.3,
+  "apiKeyEnv": "GOOGLE_API_KEY",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 10
+  }
+}

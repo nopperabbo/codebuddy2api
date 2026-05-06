@@ -1,0 +1,58 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app-web-ingress
+  namespace: default
+  labels:
+    app.kubernetes.io/name: my-app
+    app.kubernetes.io/instance: my-app
+    app.kubernetes.io/part-of: my-app
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - my-app.example.com
+    secretName: my-app-tls
+  rules:
+  - host: my-app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-app-frontend
+            port:
+              name: http
+---
+# Optional: explicit API rewrite with regex capture groups.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app-api-ingress
+  namespace: default
+  labels:
+    app.kubernetes.io/name: my-app
+    app.kubernetes.io/instance: my-app
+    app.kubernetes.io/part-of: my-app
+    app.kubernetes.io/managed-by: kubectl
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: my-app.example.com
+    http:
+      paths:
+      - path: /api(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: my-app-api
+            port:
+              name: http

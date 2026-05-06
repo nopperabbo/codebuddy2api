@@ -1,0 +1,15 @@
+{
+  "id": "mistral-large",
+  "name": "Mistral Large — European AI",
+  "description": "Mistral Large. Strong multilingual model, GDPR-compliant European provider.",
+  "provider": "mistral",
+  "model": "mistral-large-latest",
+  "maxTokens": 8192,
+  "temperature": 0.3,
+  "apiKeyEnv": "MISTRAL_API_KEY",
+  "endpoint": "https://api.mistral.ai",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 15
+  }
+}

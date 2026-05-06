@@ -919,6 +919,10 @@ class RequestProcessor:
                 payload["max_tokens"] = max(1, min(val, 128000))
             except (TypeError, ValueError):
                 del payload["max_tokens"]
+        else:
+            # Inject default max_tokens based on model to prevent upstream from using low defaults
+            model_name = payload.get("model", "")
+            payload["max_tokens"] = MODEL_MAX_OUTPUT.get(model_name, DEFAULT_MAX_OUTPUT)
 
         for unsupported in ("logit_bias", "logprobs", "top_logprobs", "n", "seed", "user", "service_tier"):
             payload.pop(unsupported, None)

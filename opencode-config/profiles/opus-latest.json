@@ -1,0 +1,14 @@
+{
+  "id": "opus-latest",
+  "name": "Opus — Maximum Quality",
+  "description": "Claude Opus. Highest quality output for complex tasks.",
+  "provider": "anthropic",
+  "model": "claude-opus-4-20250514",
+  "maxTokens": 8192,
+  "temperature": 0.2,
+  "apiKeyEnv": "ANTHROPIC_API_KEY",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 10
+  }
+}
