@@ -1,6 +1,5 @@
 """
-CodeBuddy Authentication Router
-基于真实CodeBuddy API的认证实现
+CodeBuddy Authentication Router - OAuth2 flow for CodeBuddy API
 """
 import hashlib
 import secrets
@@ -12,7 +11,6 @@ import time
 from typing import Dict, Any, Optional
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, HTTPException, Depends, Body
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from config import get_server_password
 import logging
@@ -27,41 +25,14 @@ _last_auth_state: Optional[str] = None
 
 # --- Router Setup ---
 router = APIRouter()
-security = HTTPBearer()
-
-# --- JWT Authentication ---
-import jwt
-
-def get_jwt_secret():
-    """基于服务密码生成JWT密钥"""
-    password = get_server_password()
-    if not password:
-        return "fallback-secret-for-development-only"
-    return hashlib.sha256(password.encode()).hexdigest()
-
-JWT_SECRET = get_jwt_secret()
-ALGORITHM = "HS256"
-
-def authenticate(credentials = Depends(security)) -> str:
-    """基于服务密码的认证"""
-    password = get_server_password()
-    if not password:
-        raise HTTPException(status_code=500, detail="CODEBUDDY_PASSWORD is not configured on the server.")
-    
-    token = credentials.credentials
-    if token != password:
-        raise HTTPException(status_code=403, detail="Invalid password")
-    return token
 
 # --- Helper Functions ---
 def generate_auth_state() -> str:
-    """生成CodeBuddy认证的state参数"""
     timestamp = int(time.time())
     random_part = secrets.token_hex(16)
     return f"{random_part}_{timestamp}"
 
 def get_auth_start_headers() -> Dict[str, str]:
-    """生成启动认证(/state)所需的请求头"""
     request_id = str(uuid.uuid4()).replace('-', '')
     return {
         'Host': 'www.codebuddy.ai',
@@ -82,7 +53,6 @@ def get_auth_start_headers() -> Dict[str, str]:
     }
 
 def get_auth_poll_headers() -> Dict[str, str]:
-    """生成轮询认证(/token)所需的请求头"""
     request_id = str(uuid.uuid4()).replace('-', '')
     span_id = secrets.token_hex(8)
     return {
@@ -108,15 +78,12 @@ def get_auth_poll_headers() -> Dict[str, str]:
     }
 
 async def start_codebuddy_auth() -> Dict[str, Any]:
-    """启动CodeBuddy认证流程"""
     try:
-        logger.info("启动CodeBuddy认证流程...")
+        logger.info("Starting CodeBuddy auth flow...")
         
         headers = get_auth_start_headers()
         
-        # 调用 /v2/plugin/auth/state 获取认证状态和URL
         async with httpx.AsyncClient(verify=False) as client:
-            # 为避免上游/中间层缓存，添加随机nonce参数，确保每次请求唯一
             nonce = secrets.token_hex(8)
             state_url = f"{CODEBUDDY_AUTH_STATE_ENDPOINT}?platform=CLI&nonce={nonce}"
             payload = {"nonce": nonce}
@@ -133,7 +100,7 @@ async def start_codebuddy_auth() -> Dict[str, Any]:
                     if auth_state and auth_url:
                         global _last_auth_state
                         if _last_auth_state and auth_state == _last_auth_state:
-                            logger.warning("上游返回的state与上一次相同，尝试重新获取新的state...")
+                            logger.warning("Upstream returned same state, retrying for a new one...")
                             try:
                                 nonce2 = secrets.token_hex(8)
                                 state_url2 = f"{CODEBUDDY_AUTH_STATE_ENDPOINT}?platform=CLI&nonce={nonce2}"
@@ -164,27 +131,26 @@ async def start_codebuddy_auth() -> Dict[str, Any]:
                             "expires_in": 1800,
                             "interval": 5,
                             "status": "awaiting_login",
-                            "instructions": "请点击链接完成CodeBuddy登录",
-                            "message": "请使用提供的链接登录CodeBuddy",
+                            "instructions": "Click the link to complete CodeBuddy login",
+                             "message": "Use the provided link to log in to CodeBuddy",
                             "platform": "CLI"
                         }
                         
         return {
             "success": False,
             "error": "auth_start_failed",
-            "message": "无法启动认证流程"
+            "message": "Failed to start auth flow"
         }
         
     except Exception as e:
-        logger.error(f"启动CodeBuddy认证失败: {e}")
+        logger.error(f"Failed to start CodeBuddy auth: {e}")
         return {
             "success": False,
             "error": "auth_start_failed", 
-            "message": f"认证启动失败: {str(e)}"
+            "message": f"Auth start failed: {str(e)}"
         }
 
 async def poll_codebuddy_auth_status(auth_state: str) -> Dict[str, Any]:
-    """轮询CodeBuddy认证状态"""
     try:
         headers = get_auth_poll_headers()
         url = f"{CODEBUDDY_AUTH_TOKEN_ENDPOINT}?state={auth_state}"
@@ -196,18 +162,16 @@ async def poll_codebuddy_auth_status(auth_state: str) -> Dict[str, Any]:
                 result = response.json()
                 
                 if result.get('code') == 11217:
-                    # 仍在等待登录
                     return {
                         "status": "pending",
                         "message": result.get('msg', 'login ing...'),
                         "code": result.get('code')
                     }
                 elif result.get('code') == 0 and result.get('data') and result.get('data', {}).get('accessToken'):
-                    # 认证成功，获得token
                     data = result.get('data', {})
                     return {
                         "status": "success",
-                        "message": "认证成功！",
+                        "message": "Authentication successful!",
                         "token_data": {
                             "access_token": data.get('accessToken'),
                             "bearer_token": data.get('accessToken'),
@@ -221,7 +185,6 @@ async def poll_codebuddy_auth_status(auth_state: str) -> Dict[str, Any]:
                         }
                     }
                 else:
-                    # 其他状态码
                     return {
                         "status": "unknown",
                         "message": result.get('msg', 'Unknown status'),
@@ -231,54 +194,47 @@ async def poll_codebuddy_auth_status(auth_state: str) -> Dict[str, Any]:
             else:
                 return {
                     "status": "error",
-                    "message": f"API请求失败，状态码: {response.status_code}",
+                    "message": f"API request failed with status: {response.status_code}",
                     "response_text": response.text
                 }
                 
     except Exception as e:
-        logger.error(f"轮询认证状态失败: {e}")
+        logger.error(f"Failed to poll auth status: {e}")
         return {
             "status": "error",
-            "message": f"轮询失败: {str(e)}"
+            "message": f"Poll failed: {str(e)}"
         }
 
 async def save_codebuddy_token(token_data: Dict[str, Any]) -> bool:
-    """保存CodeBuddy token到文件"""
     try:
         from .codebuddy_token_manager import codebuddy_token_manager
         
-        # 添加创建时间
         token_data["created_at"] = int(time.time())
-        
-        # 从JWT中解析用户信息
+
         bearer_token = token_data.get("access_token") or token_data.get("bearer_token")
         user_id = "unknown"
         user_info = {}
-        
+
         try:
             if bearer_token and '.' in bearer_token:
-                # 分割JWT token
                 parts = bearer_token.split('.')
                 if len(parts) >= 2:
                     payload_part = parts[1]
-                    
-                    # 修复Base64 padding问题
+
+                    # Fix Base64 padding
                     missing_padding = len(payload_part) % 4
                     if missing_padding:
                         payload_part += '=' * (4 - missing_padding)
-                    
-                    # 解码JWT payload
+
                     try:
                         payload = base64.urlsafe_b64decode(payload_part)
                         jwt_data = json.loads(payload.decode('utf-8'))
-                        
-                        # 提取用户信息，优先使用邮箱作为用户标识
-                        user_id = (jwt_data.get('email') or 
-                                 jwt_data.get('preferred_username') or 
-                                 jwt_data.get('sub') or 
+
+                        user_id = (jwt_data.get('email') or
+                                 jwt_data.get('preferred_username') or
+                                 jwt_data.get('sub') or
                                  "unknown")
-                        
-                        # 保存完整的用户信息
+
                         user_info = {
                             'sub': jwt_data.get('sub'),
                             'email': jwt_data.get('email'),
@@ -291,28 +247,25 @@ async def save_codebuddy_token(token_data: Dict[str, Any]) -> bool:
                             'scope': jwt_data.get('scope'),
                             'session_state': jwt_data.get('sid')
                         }
-                        
-                        # 移除None值
+
                         user_info = {k: v for k, v in user_info.items() if v is not None}
-                        
-                        logger.info(f"成功解析JWT，用户: {user_id}")
-                        logger.debug(f"JWT用户信息: {user_info}")
-                        
+
+                        logger.info(f"JWT parsed, user: {user_id}")
+
                     except (json.JSONDecodeError, UnicodeDecodeError) as decode_error:
-                        logger.warning(f"JWT payload解码失败: {decode_error}")
+                        logger.warning(f"JWT payload decode failed: {decode_error}")
                         user_id = token_data.get('domain', 'unknown')
                 else:
-                    logger.warning("JWT格式无效：缺少必要的部分")
+                    logger.warning("Invalid JWT format: missing parts")
                     user_id = token_data.get('domain', 'unknown')
             else:
-                logger.warning("Bearer token为空或格式无效")
+                logger.warning("Bearer token empty or invalid format")
                 user_id = token_data.get('domain', 'unknown')
-                
+
         except Exception as e:
-            logger.error(f"JWT解析过程发生异常: {e}")
+            logger.error(f"JWT parsing error: {e}")
             user_id = token_data.get('domain', 'unknown')
-        
-        # 构建完整的凭证数据
+
         credential_data = {
             "bearer_token": bearer_token,
             "user_id": user_id,
@@ -324,56 +277,52 @@ async def save_codebuddy_token(token_data: Dict[str, Any]) -> bool:
             "domain": token_data.get('domain'),
             "session_state": token_data.get('session_state'),
             "user_info": user_info,
-            "full_response": token_data  # 保存完整的原始响应
+            "full_response": token_data
         }
-        
-        # 移除None值，保持文件整洁
+
         credential_data = {k: v for k, v in credential_data.items() if v is not None}
-        
-        # 生成更友好的文件名
+
         timestamp = int(time.time())
         safe_user_id = "".join(c for c in user_id if c.isalnum() or c in "._-")[:20]
         filename = f"codebuddy_{safe_user_id}_{timestamp}.json"
-        
-        # 使用token管理器保存
+
         success = codebuddy_token_manager.add_credential_with_data(
             credential_data=credential_data,
             filename=filename
         )
-        
+
         if success:
-            logger.info(f"成功保存CodeBuddy token，用户: {user_id}，文件: {filename}")
-        
+            logger.info(f"Saved CodeBuddy token, user: {user_id}, file: {filename}")
+
         return success
-        
+
     except Exception as e:
-        logger.error(f"保存CodeBuddy token失败: {e}")
+        logger.error(f"Failed to save CodeBuddy token: {e}")
         return False
 
-# --- API Endpoints ---
+
 @router.get("/auth/start", summary="Start CodeBuddy Authentication")
 async def start_device_auth():
-    """启动CodeBuddy认证流程"""
     try:
-        logger.info("开始启动CodeBuddy认证流程...")
-        
-        # 尝试真实的CodeBuddy认证API
+        logger.info("Starting CodeBuddy auth flow...")
+
         real_auth_result = await start_codebuddy_auth()
-        
+
         if real_auth_result.get('success'):
-            logger.info("真实CodeBuddy认证API启动成功!")
+            logger.info("CodeBuddy auth API started successfully!")
             return real_auth_result
         else:
-            logger.warning(f"真实认证API失败: {real_auth_result}")
+            logger.warning(f"Auth API failed: {real_auth_result}")
             return real_auth_result
-        
+
     except Exception as e:
-        logger.error(f"认证启动过程发生异常: {e}")
+        logger.error(f"Auth start error: {e}")
         return {
             "success": False,
             "error": "Unexpected error",
-            "message": f"认证启动失败: {str(e)}"
+            "message": f"Auth start failed: {str(e)}"
         }
+
 
 @router.post("/auth/poll", summary="Poll for OAuth token")
 async def poll_for_token(
@@ -381,22 +330,17 @@ async def poll_for_token(
     code_verifier: str = Body(None, embed=True),
     auth_state: str = Body(None, embed=True)
 ):
-    """轮询CodeBuddy token端点"""
     from .codebuddy_token_manager import codebuddy_token_manager
-    
-    # 如果有auth_state，说明是真实的CodeBuddy认证流程
+
     if auth_state:
-        logger.info(f"轮询真实CodeBuddy认证状态: {auth_state}")
+        logger.info(f"Polling CodeBuddy auth status: {auth_state}")
         poll_result = await poll_codebuddy_auth_status(auth_state)
-        
+
         if poll_result.get('status') == 'success':
-            # 认证成功，保存token
             token_data = poll_result.get('token_data', {})
             if token_data:
-                # 提取token信息
                 bearer_token = token_data.get('access_token') or token_data.get('bearer_token')
                 if bearer_token:
-                    # 保存token
                     token_saved = await save_codebuddy_token(token_data)
                     return JSONResponse(content={
                         "access_token": bearer_token,
@@ -405,47 +349,45 @@ async def poll_for_token(
                         "refresh_token": token_data.get('refresh_token'),
                         "scope": token_data.get('scope'),
                         "saved": token_saved,
-                        "message": "认证成功！🎉",
+                        "message": "Authentication successful!",
                         "user_info": token_data,
                         "domain": token_data.get('domain')
                     }, status_code=200)
                 else:
                     return JSONResponse(content={
                         "error": "invalid_token_response",
-                        "error_description": "API返回的响应中没有找到token"
+                        "error_description": "No token found in API response"
                     }, status_code=400)
         elif poll_result.get('status') == 'pending':
-            # 仍在等待
             return JSONResponse(content={
                 "error": "authorization_pending",
-                "error_description": poll_result.get('message', '等待用户登录...'),
+                "error_description": poll_result.get('message', 'Waiting for user login...'),
                 "code": poll_result.get('code')
             }, status_code=400)
         else:
-            # 错误状态
             return JSONResponse(content={
                 "error": "auth_error",
-                "error_description": poll_result.get('message', '认证过程发生错误'),
+                "error_description": poll_result.get('message', 'Auth error occurred'),
                 "details": poll_result
             }, status_code=400)
     else:
         return JSONResponse(content={
             "error": "missing_parameters",
-            "error_description": "缺少必要的参数：auth_state"
+            "error_description": "Missing required parameter: auth_state"
         }, status_code=400)
+
 
 @router.get("/auth/callback", summary="OAuth2 callback endpoint")
 async def oauth_callback(code: str = None, state: str = None, error: str = None):
-    """OAuth2回调端点"""
     if error:
         return JSONResponse(
-            content={"error": error, "error_description": "授权被拒绝或出现错误"},
+            content={"error": error, "error_description": "Authorization denied or error occurred"},
             status_code=400
         )
-    
+
     return JSONResponse(
         content={
-            "message": "授权成功！请返回应用程序。",
+            "message": "Authorization successful! You may return to the application.",
             "code": code,
             "state": state
         }

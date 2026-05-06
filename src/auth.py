@@ -9,7 +9,6 @@ security = HTTPBearer()
 
 
 def authenticate(credentials = Depends(security)) -> str:
-    """验证用户身份"""
     password = get_server_password()
     if not password:
         raise HTTPException(

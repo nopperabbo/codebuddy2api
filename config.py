@@ -27,7 +27,8 @@ _DEFAULT_CONFIG = {
     "CODEBUDDY_CREDS_DIR": ".codebuddy_creds",
     "CODEBUDDY_LOG_LEVEL": "INFO",
     "CODEBUDDY_MODELS": "claude-4.0,claude-3.7,gpt-5,gpt-5-mini,gpt-5-nano,o4-mini,gemini-2.5-flash,gemini-2.5-pro,auto-chat",
-    "CODEBUDDY_ROTATION_COUNT": 1
+    "CODEBUDDY_ROTATION_COUNT": 1,
+    "CODEBUDDY_PROMPT_ENHANCE": "true"
 }
 
 # --- Core Functions ---
@@ -85,17 +86,26 @@ def save_config_to_json():
     This will create the file if it doesn't exist.
     """
     try:
-        # Ensure the directory exists before writing the file
         config_dir = os.path.dirname(_CONFIG_JSON_PATH)
         if not os.path.exists(config_dir):
             os.makedirs(config_dir)
             logger.info(f"Created config directory at {config_dir}")
 
-        with open(_CONFIG_JSON_PATH, 'w', encoding='utf-8') as f:
-            # Only save keys that are part of the original default config
-            # to avoid saving runtime-only variables.
-            config_to_save = {key: _config_cache.get(key) for key in _DEFAULT_CONFIG}
-            json.dump(config_to_save, f, indent=4)
+        config_to_save = {key: _config_cache.get(key) for key in _DEFAULT_CONFIG}
+
+        import tempfile
+        fd, tmp_path = tempfile.mkstemp(dir=config_dir or '.', suffix='.tmp')
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                json.dump(config_to_save, f, indent=4)
+            os.replace(tmp_path, _CONFIG_JSON_PATH)
+        except BaseException:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
+
         logger.info(f"Settings successfully persisted to {_CONFIG_JSON_PATH}.")
     except Exception as e:
         logger.error(f"Failed to save config to {_CONFIG_JSON_PATH}: {e}")
@@ -130,6 +140,10 @@ def get_available_models() -> list:
 
 def get_rotation_count() -> int:
     return int(_get_config_value("CODEBUDDY_ROTATION_COUNT"))
+
+def get_prompt_enhance_enabled() -> bool:
+    val = str(_get_config_value("CODEBUDDY_PROMPT_ENHANCE")).lower()
+    return val in ('true', '1', 'yes', 'on')
 
 # --- Public Setter for Hot-Reload ---
 

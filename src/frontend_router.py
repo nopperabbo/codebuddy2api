@@ -16,7 +16,6 @@ async def serve_frontend():
     if not os.path.exists(HTML_FILE_PATH):
         return "Frontend file not found. Please ensure frontend/admin.html exists."
     
-    # 添加缓存控制头，防止浏览器缓存
     headers = {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -31,7 +30,6 @@ async def serve_admin():
     if not os.path.exists(HTML_FILE_PATH):
         return "Frontend file not found. Please ensure frontend/admin.html exists."
     
-    # 添加缓存控制头，防止浏览器缓存
     headers = {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-cache, no-store, must-revalidate",

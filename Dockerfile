@@ -30,8 +30,6 @@ RUN useradd -m -u 1001 appuser
 
 # 声明容器将要监听的端口
 # 这个端口应该与您在配置中设置的 CODEBUDDY_PORT 一致
-EXPOSE 8001
+EXPOSE 8003
 
-# 定义容器启动时要执行的命令
-# 使用 Hypercorn 启动，它是一个生产级的 ASGI 服务器
-CMD ["hypercorn", "web:app", "--bind", "0.0.0.0:8001"]
+CMD ["hypercorn", "web:app", "--bind", "0.0.0.0:8003"]

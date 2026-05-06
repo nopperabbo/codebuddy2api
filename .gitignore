@@ -130,12 +130,18 @@ dmypy.json
 .pyre/
 
 # CodeBuddy2API specific
-# Ignore the content of the credentials directory, but not the directory itself.
-# This ensures the directory is present in the repository.
-.codebuddy_creds/*
-# You can add a .gitkeep file inside .codebuddy_creds to ensure the directory is tracked.
-# Or, if you have an example file, you can explicitly un-ignore it like this:
-# !.codebuddy_creds/credential.example.json
+.codebuddy_creds/
+!.codebuddy_creds/.gitkeep
+accounts.txt
+accounts_batch*.txt
+harvested_keys.json
+harvest_log.txt
+*.har
+.sessions/
+stats.json
+.mcp_data/
+.opencode-context.md
+config/config.json
 
 # IDE files
 .vscode/

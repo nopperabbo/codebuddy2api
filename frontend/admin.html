@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodeBuddy2API 管理控制面板</title>
+    <title>CodeBuddy2API Admin Dashboard</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -42,7 +42,7 @@
             color: var(--text-dark);
         }
 
-        /* 顶部导航栏 */
+        /* Top Navigation Bar */
         .header {
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
@@ -83,7 +83,7 @@
             background: rgba(255, 255, 255, 0.2);
         }
 
-        /* 主要内容区域 */
+        /* Main Content Area */
         .main-content {
             margin-top: 80px;
             padding: 2rem;
@@ -92,7 +92,7 @@
             margin-right: auto;
         }
 
-        /* 导航标签 */
+        /* Navigation Tabs */
         .nav-tabs {
             display: flex;
             gap: 0.5rem;
@@ -125,7 +125,7 @@
             border-bottom-color: var(--primary-color);
         }
 
-        /* 标签面板 */
+        /* Tab Panels */
         .tab-panel {
             display: none;
             animation: fadeIn 0.3s ease;
@@ -140,7 +140,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* 卡片样式 */
+        /* Card Styles */
         .card {
             background: var(--card-light);
             border: 1px solid var(--border-light);
@@ -179,7 +179,7 @@
             color: var(--text-dark);
         }
 
-        /* 按钮样式 */
+        /* Button Styles */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -239,7 +239,7 @@
             background: #475569;
         }
 
-        /* 表单样式 */
+        /* Form Styles */
         .form-group {
             margin-bottom: 1rem;
         }
@@ -282,7 +282,7 @@
             min-height: 100px;
         }
 
-        /* 凭证列表 */
+        /* Credential List */
         .credential-list {
             display: grid;
             gap: 0.75rem;
@@ -388,7 +388,7 @@
             font-size: 0.8rem;
         }
 
-        /* 凭证分组 */
+        /* Credential Grouping */
         .credential-group {
             margin-bottom: 1.5rem;
         }
@@ -451,7 +451,7 @@
             margin-bottom: 0;
         }
 
-        /* 状态样式 */
+        /* Status Styles */
         .status {
             padding: 0.25rem 0.75rem;
             border-radius: 0.25rem;
@@ -474,7 +474,7 @@
             color: var(--warning-color);
         }
 
-        /* 通知样式 */
+        /* Notification Styles */
         .notification {
             position: fixed;
             top: 100px;
@@ -509,7 +509,7 @@
             background: var(--primary-color);
         }
 
-        /* 加载样式 */
+        /* Loading Styles */
         .loading {
             text-align: center;
             padding: 2rem;
@@ -540,7 +540,7 @@
             to { transform: rotate(360deg); }
         }
 
-        /* 微交互动画 */
+        /* Micro-interaction Animations */
         .btn {
             position: relative;
             overflow: hidden;
@@ -568,14 +568,14 @@
             height: 300px;
         }
 
-        /* 平滑过渡 */
+        /* Smooth Transitions */
         .credential-item,
         .stat-card,
         .card {
             transition: all 0.2s ease;
         }
 
-        /* 成功状态动画 */
+        /* Success State Animation */
         @keyframes successPulse {
             0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
             70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
@@ -586,7 +586,7 @@
             animation: successPulse 0.6s;
         }
 
-        /* 错误状态动画 */
+        /* Error State Animation */
         @keyframes errorShake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); }
@@ -597,7 +597,7 @@
             animation: errorShake 0.5s;
         }
 
-        /* 进度条样式 */
+        /* Progress Bar Styles */
         .progress-bar {
             width: 100%;
             height: 4px;
@@ -618,7 +618,7 @@
             transition: width 0.3s ease;
         }
 
-        /* 响应式设计 */
+        /* Responsive Design */
         @media (max-width: 1024px) {
             .stats-grid {
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -760,12 +760,12 @@
             }
         }
 
-        /* 隐藏/显示元素 */
+        /* Hide/Show Elements */
         .hidden {
             display: none !important;
         }
 
-        /* 登录页面样式 */
+        /* Login Page Styles */
         .login-page {
             display: flex;
             align-items: center;
@@ -855,7 +855,7 @@
             margin-top: 0.5rem;
         }
 
-        /* OAuth2认证区域 */
+        /* OAuth2 Auth Section */
         .auth-section {
             border-left: 4px solid var(--primary-color);
             padding-left: 1rem;
@@ -922,7 +922,7 @@
             50% { opacity: 0.5; }
         }
 
-        /* API测试区域 */
+        /* API Test Section */
         .api-test {
             border-left: 4px solid var(--primary-color);
             padding-left: 1rem;
@@ -944,7 +944,7 @@
             border-color: var(--border-dark);
         }
 
-        /* 统计卡片 */
+        /* Stats Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1036,7 +1036,7 @@
             color: var(--error-color);
         }
 
-        /* 使用率环形图 */
+        /* Usage Ring Chart */
         .usage-ring {
             position: relative;
             width: 60px;
@@ -1079,7 +1079,7 @@
             color: var(--text-dark);
         }
 
-        /* 状态指示器 */
+        /* Status Indicator */
         .status-indicator {
             display: inline-flex;
             align-items: center;
@@ -1146,7 +1146,7 @@
             font-weight: 500;
         }
 
-        /* 选中的凭证样式 */
+        /* Selected Credential Styles */
         .credential-item-selected {
             border: 2px solid var(--primary-color) !important;
             background: rgba(59, 130, 246, 0.05) !important;
@@ -1167,10 +1167,123 @@
             margin-left: 0.5rem;
             font-weight: 600;
         }
+
+        .credential-item-disabled {
+            opacity: 0.55;
+            border-left: 3px solid var(--secondary-color) !important;
+        }
+
+        .credential-item-exhausted {
+            border-left: 3px solid var(--warning-color) !important;
+        }
+
+        .credential-disabled-badge {
+            display: inline-block;
+            background: var(--secondary-color);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            margin-left: 0.5rem;
+            font-weight: 600;
+        }
+
+        .credential-exhausted-badge {
+            display: inline-block;
+            background: var(--warning-color);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            margin-left: 0.5rem;
+            font-weight: 600;
+        }
+
+        /* Alert Banner */
+        .alert-banner {
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+        }
+
+        .alert-banner.alert-critical {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid var(--error-color);
+            color: var(--error-color);
+        }
+
+        .alert-banner.alert-warning {
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid var(--warning-color);
+            color: var(--warning-color);
+        }
+
+        .alert-banner.alert-info {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* Fleet toolbar */
+        .fleet-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .fleet-toolbar .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-light);
+            border-radius: 0.5rem;
+            background: var(--card-light);
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        body.dark .fleet-toolbar .search-input {
+            border-color: var(--border-dark);
+            background: var(--card-dark);
+            color: var(--text-dark);
+        }
+
+        .fleet-toolbar .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .fleet-toolbar select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-light);
+            border-radius: 0.5rem;
+            background: var(--card-light);
+            color: var(--text-light);
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        body.dark .fleet-toolbar select {
+            border-color: var(--border-dark);
+            background: var(--card-dark);
+            color: var(--text-dark);
+        }
+
+        .fleet-summary {
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            padding: 0.5rem 0;
+        }
     </style>
 </head>
 <body>
-    <!-- 登录页面 -->
+    <!-- Login Page -->
     <div id="loginPage" class="login-page">
         <div class="login-card">
             <div class="login-title">
@@ -1178,62 +1291,62 @@
                 CodeBuddy2API
             </div>
             <div class="login-subtitle">
-                请输入管理密码以访问控制面板
+                Please enter the admin password to access the dashboard
             </div>
             <form class="login-form" onsubmit="handleLogin(event)">
                 <input
                     type="password"
                     id="loginPassword"
                     class="login-input"
-                    placeholder="请输入密码"
+                    placeholder="Please enter password"
                     required
                     autocomplete="current-password"
                 >
                 <button type="submit" id="loginButton" class="login-button">
-                    <i class="fas fa-sign-in-alt"></i> 登录
+                    <i class="fas fa-sign-in-alt"></i> Login
                 </button>
                 <div id="loginError" class="login-error hidden"></div>
             </form>
         </div>
     </div>
 
-    <!-- 主仪表盘页面 -->
+    <!-- Main Dashboard Page -->
     <div id="dashboardPage" class="hidden">
-        <!-- 顶部导航 -->
+        <!-- Top Navigation -->
         <header class="header">
-            <h1><i class="fas fa-robot"></i> CodeBuddy2API 管理面板</h1>
+            <h1><i class="fas fa-robot"></i> CodeBuddy2API Admin Panel</h1>
             <div class="header-controls">
                 <button class="theme-toggle" onclick="toggleTheme()">
                     <i class="fas fa-moon" id="themeIcon"></i>
                 </button>
                 <button class="btn btn-secondary" onclick="logout()" style="margin-left: 0.5rem;">
-                    <i class="fas fa-sign-out-alt"></i> 退出
+                    <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
         </header>
 
-        <!-- 主要内容 -->
+            <!-- Main Content -->
         <main class="main-content">
-            <!-- 导航标签 -->
+            <!-- Navigation Tabs -->
             <div class="nav-tabs">
                 <button class="nav-tab active" onclick="showTab('dashboard')">
-                    <i class="fas fa-tachometer-alt"></i> 仪表板
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
                 </button>
                 <button class="nav-tab" onclick="showTab('credentials')">
-                    <i class="fas fa-key"></i> 凭证管理
+                    <i class="fas fa-key"></i> Credentials
                 </button>
                 <button class="nav-tab" onclick="showTab('api-test')">
-                    <i class="fas fa-flask"></i> API 测试
+                    <i class="fas fa-flask"></i> API Test
                 </button>
                 <button class="nav-tab" onclick="showTab('settings')">
-                    <i class="fas fa-cog"></i> 设置
+                    <i class="fas fa-cog"></i> Settings
                 </button>
             </div>
 
-            <!-- 仪表板面板 -->
+            <!-- Dashboard Panel -->
             <div id="dashboard" class="tab-panel active">
                 <div class="stats-grid">
-                    <!-- 凭证统计卡片 -->
+                    <!-- Credential Stats Card -->
                     <div class="stat-card">
                         <div class="stat-card-header">
                             <div class="stat-card-icon primary">
@@ -1248,13 +1361,13 @@
                             </div>
                         </div>
                         <div class="stat-value" id="totalCredentials">-</div>
-                        <div class="stat-label">总凭证数量</div>
+                        <div class="stat-label">Total Credentials</div>
                         <div class="stat-trend positive" id="credentialTrend">
-                            <i class="fas fa-check"></i> <span id="validCredentials">0</span> 个有效
+                            <i class="fas fa-check"></i> <span id="validCredentials">0</span> valid
                         </div>
                     </div>
 
-                    <!-- 服务状态卡片 -->
+                    <!-- Service Status Card -->
                     <div class="stat-card">
                         <div class="stat-card-header">
                             <div class="stat-card-icon success" id="serviceStatusIcon">
@@ -1264,15 +1377,15 @@
                                 <span class="status-dot online" id="statusDot"></span>
                             </div>
                         </div>
-                        <div class="stat-value" id="statusText">运行中</div>
-                        <div class="stat-label">服务运行状态</div>
+                        <div class="stat-value" id="statusText">Running</div>
+                        <div class="stat-label">Service Status</div>
                         <div class="stat-trend" id="uptimeTrend">
-                            <i class="fas fa-clock"></i> <span id="uptime">运行时长加载中...</span>
+                            <i class="fas fa-clock"></i> <span id="uptime">Loading uptime...</span>
                         </div>
                     </div>
 
-                    <!-- API端点卡片 -->
-                    <div class="stat-card" onclick="copyApiEndpoint()" style="cursor: pointer;" title="点击复制API端点">
+                    <!-- API Endpoint Card -->
+                    <div class="stat-card" onclick="copyApiEndpoint()" style="cursor: pointer;" title="Click to copy API endpoint">
                         <div class="stat-card-header">
                             <div class="stat-card-icon warning">
                                 <i class="fas fa-link"></i>
@@ -1282,13 +1395,13 @@
                             </div>
                         </div>
                         <div class="stat-value" id="apiEndpoint" style="font-size: 1.2rem; word-break: break-all;">-</div>
-                        <div class="stat-label">API 服务端点</div>
+                        <div class="stat-label">API Endpoint</div>
                         <div class="stat-trend">
-                            <i class="fas fa-info-circle"></i> 点击复制链接
+                            <i class="fas fa-info-circle"></i> Click to copy link
                         </div>
                     </div>
 
-                    <!-- 总使用次数卡片 -->
+                    <!-- Total Usage Card -->
                     <div class="stat-card">
                         <div class="stat-card-header">
                             <div class="stat-card-icon primary">
@@ -1303,26 +1416,26 @@
                             </div>
                         </div>
                         <div class="stat-value" id="totalApiCalls">0</div>
-                        <div class="stat-label">总 API 调用次数</div>
+                        <div class="stat-label">Total API Calls</div>
                         <div class="stat-trend" id="apiCallsTrend">
-                            <i class="fas fa-arrow-up"></i> 持续增长
+                            <i class="fas fa-arrow-up"></i> Growing
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-chart-bar"></i> 模型使用统计</h3>
+                        <h3 class="card-title"><i class="fas fa-chart-bar"></i> Model Usage Statistics</h3>
                          <button class="btn btn-primary" onclick="refreshDashboard()">
-                            <i class="fas fa-sync-alt"></i> 刷新
+                            <i class="fas fa-sync-alt"></i> Refresh
                         </button>
                     </div>
                     <div class="usage-table-container">
                         <table class="usage-table">
                             <thead>
                                 <tr>
-                                    <th>模型名称</th>
-                                    <th style="text-align: right;">使用次数</th>
+                                    <th>Model Name</th>
+                                    <th style="text-align: right;">Usage Count</th>
                                 </tr>
                             </thead>
                             <tbody id="modelUsageTableBody">
@@ -1334,14 +1447,14 @@
 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-key"></i> 凭证使用统计</h3>
+                        <h3 class="card-title"><i class="fas fa-key"></i> Credential Usage Statistics</h3>
                     </div>
                     <div class="usage-table-container">
                         <table class="usage-table">
                             <thead>
                                 <tr>
-                                    <th>凭证文件</th>
-                                    <th style="text-align: right;">使用次数</th>
+                                    <th>Credential File</th>
+                                    <th style="text-align: right;">Usage Count</th>
                                 </tr>
                             </thead>
                             <tbody id="credentialUsageTableBody">
@@ -1350,132 +1463,199 @@
                         </table>
                     </div>
                 </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-history"></i> Hourly Request History</h3>
+                        <div>
+                            <select id="historyHours" class="form-input" style="width: auto; display: inline-block; padding: 0.4rem 0.6rem;" onchange="loadHourlyHistory()">
+                                <option value="6">Last 6h</option>
+                                <option value="12">Last 12h</option>
+                                <option value="24" selected>Last 24h</option>
+                                <option value="48">Last 48h</option>
+                                <option value="72">Last 72h</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="loadHourlyHistory()" style="margin-left: 0.5rem;">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="usage-table-container">
+                        <table class="usage-table">
+                            <thead>
+                                <tr>
+                                    <th>Hour (UTC)</th>
+                                    <th style="text-align: right;">Requests</th>
+                                    <th style="text-align: right;">Failures</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hourlyHistoryTableBody">
+                                <tr><td colspan="3" style="text-align: center;">Click refresh to load</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="failureRankingSection" style="margin-top: 1rem; display: none;">
+                        <h4 style="margin-bottom: 0.5rem; color: var(--secondary-color);">Top Failing Keys</h4>
+                        <div class="usage-table-container">
+                            <table class="usage-table">
+                                <thead>
+                                    <tr>
+                                        <th>Credential</th>
+                                        <th style="text-align: right;">Failures</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="failureRankingTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- 凭证管理面板 -->
+            <!-- Credential Management Panel -->
             <div id="credentials" class="tab-panel">
-                <!-- OAuth2自动认证区域 -->
+                <!-- OAuth2 Automatic Auth Section -->
                 <div class="card auth-section">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-magic"></i> 自动获取认证</h3>
+                        <h3 class="card-title"><i class="fas fa-magic"></i> Auto Fetch Credentials</h3>
                     </div>
                     <p style="margin-bottom: 1rem; color: var(--secondary-color);">
-                        点击下方按钮自动启动CodeBuddy OAuth2认证流程，系统将自动获取并保存您的认证凭证。
+                        Click the button below to start the CodeBuddy OAuth2 flow. The system will automatically obtain and save your credentials.
                     </p>
                     <button class="btn btn-primary" id="getAuthBtn" onclick="startAuth()">
-                        <i class="fas fa-play"></i> 开始认证
+                        <i class="fas fa-play"></i> Start Auth
                     </button>
                     
-                    <!-- 认证URL显示区域 -->
+                    <!-- Auth URL Display Section -->
                     <div id="authUrlSection" class="auth-url-section hidden">
-                        <h4 style="margin-bottom: 1rem; color: var(--primary-color);">认证链接已生成</h4>
+                        <h4 style="margin-bottom: 1rem; color: var(--primary-color);">Auth link generated</h4>
                         <p style="margin-bottom: 1rem; color: var(--secondary-color);">
-                            请点击下面的链接完成CodeBuddy账号登录：
+                            Please click the link below to sign in to CodeBuddy:
                         </p>
                         <input type="text" id="authUrlInput" class="auth-url-input" readonly>
                         <div class="auth-buttons">
                             <button class="btn btn-success" onclick="openAuthUrl()">
-                                <i class="fas fa-external-link-alt"></i> 打开链接
+                                <i class="fas fa-external-link-alt"></i> Open Link
                             </button>
                             <button class="btn btn-secondary" onclick="copyAuthUrl()">
-                                <i class="fas fa-copy"></i> 复制链接
+                                <i class="fas fa-copy"></i> Copy Link
                             </button>
                             <button class="btn btn-warning" onclick="showManualCallback()">
-                                <i class="fas fa-hand-pointer"></i> 手动回调
+                                <i class="fas fa-hand-pointer"></i> Manual Callback
                             </button>
                         </div>
                         
-                        <!-- 自动回调等待区域 -->
+                        <!-- Auto Callback Waiting -->
                         <div id="autoCallbackSection" class="callback-section">
                             <div class="auth-progress">
                                 <i class="fas fa-clock"></i>
-                                <div>等待认证完成...</div>
-                                <small style="color: var(--secondary-color);">完成登录后系统将自动获取凭证</small>
+                                <div>Waiting for authentication to complete...</div>
+                                <small style="color: var(--secondary-color);">After login finishes, the system will automatically save credentials</small>
                             </div>
                             <div style="text-align: center; margin-top: 1rem;">
                                 <button class="btn btn-secondary" onclick="waitForAutoCallback()">
-                                    <i class="fas fa-sync-alt"></i> 检查认证状态
+                                    <i class="fas fa-sync-alt"></i> Check Auth Status
                                 </button>
                             </div>
                         </div>
                         
-                        <!-- 手动回调区域 -->
+                        <!-- Manual Callback Section -->
                         <div id="manualCallbackSection" class="callback-section hidden">
-                            <h5 style="margin-bottom: 1rem;">手动输入回调链接</h5>
+                            <h5 style="margin-bottom: 1rem;">Enter callback URL manually</h5>
                             <p style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--secondary-color);">
-                                如果自动检测失败，请在完成登录后，将浏览器地址栏中的完整URL粘贴到下面：
+                                If auto-detect fails, after login paste the full browser URL below:
                             </p>
-                            <input type="text" id="callbackUrl" class="form-input" placeholder="粘贴回调URL...">
+                            <input type="text" id="callbackUrl" class="form-input" placeholder="Paste callback URL...">
                             <div style="margin-top: 1rem; text-align: right;">
-                                <button class="btn btn-secondary" onclick="waitForAutoCallback()">返回自动模式</button>
-                                <button class="btn btn-success" onclick="submitCallbackUrl()">提交</button>
+                                <button class="btn btn-secondary" onclick="waitForAutoCallback()">Return to Auto Mode</button>
+                                <button class="btn btn-success" onclick="submitCallbackUrl()">Submit</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 手动添加凭证区域 -->
+                <!-- Manual Credential Add Section -->
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-edit"></i> 手动添加凭证</h3>
+                        <h3 class="card-title"><i class="fas fa-edit"></i> Manually Add Credential</h3>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="bearerToken">Bearer Token <span style="color: var(--error-color);">*</span></label>
                         <textarea
                             id="bearerToken"
                             class="form-input form-textarea"
-                            placeholder="输入您的 CodeBuddy Bearer Token..."
+                            placeholder="Enter your CodeBuddy Bearer Token..."
                             rows="3"></textarea>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="userId">用户ID (可选)</label>
+                        <label class="form-label" for="userId">User ID (optional)</label>
                         <input
                             type="text"
                             id="userId"
                             class="form-input"
-                            placeholder="输入用户ID (可选)">
+                            placeholder="Enter user ID (optional)">
                     </div>
-                    <button class="btn btn-success" onclick="addCredential()">
-                        <i class="fas fa-plus"></i> 添加凭证
+                        <button class="btn btn-success" onclick="addCredential()">
+                            <i class="fas fa-plus"></i> Add Credential
                     </button>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">已保存的凭证</h3>
+                        <h3 class="card-title">Saved Credentials</h3>
                         <div>
                             <button id="rotationToggleBtn" class="btn btn-secondary" onclick="toggleAutoRotation()" style="margin-right: 0.5rem;">
-                                <i class="fas fa-ban"></i> 恢复自动轮换
+                                <i class="fas fa-ban"></i> Resume Auto Rotation
                             </button>
                             <button class="btn btn-primary" onclick="loadCredentials()">
-                                <i class="fas fa-sync-alt"></i> 刷新列表
+                                <i class="fas fa-sync-alt"></i> Refresh List
                             </button>
                         </div>
                     </div>
                     
-                    <!-- 当前使用状态 -->
+                    <!-- Current Usage Status -->
                     <div id="currentCredentialStatus" class="card-header" style="border-bottom: 1px solid var(--border-light); margin-bottom: 1rem;">
                         <div class="loading">
                             <i class="fas fa-spinner fa-spin"></i>
-                            <div>加载当前状态...</div>
+                            <div>Loading current status...</div>
                         </div>
                     </div>
-                    
-                    <div id="credentialsList" class="loading">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <div>加载中...</div>
+
+                    <!-- Alert Banner -->
+                    <div id="fleetAlertBanner"></div>
+
+                    <!-- Fleet Toolbar: Search / Filter / Sort -->
+                    <div class="fleet-toolbar">
+                        <input type="text" class="search-input" id="fleetSearch" placeholder="Search by email or filename..." oninput="applyFleetFilters()">
+                        <select id="fleetFilter" onchange="applyFleetFilters()">
+                            <option value="all">All</option>
+                            <option value="healthy">Healthy</option>
+                            <option value="exhausted">Exhausted</option>
+                            <option value="expired">Expired</option>
+                            <option value="disabled">Disabled</option>
+                        </select>
+                        <select id="fleetSort" onchange="applyFleetFilters()">
+                            <option value="default">Sort: Default</option>
+                            <option value="email">Sort: Email</option>
+                            <option value="filename">Sort: Filename</option>
+                        </select>
+                    </div>
+                    <div id="fleetSummary" class="fleet-summary"></div>
+
+                        <div id="credentialsList" class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <div>Loading...</div>
                     </div>
                 </div>
             </div>
 
-            <!-- API测试面板 -->
+            <!-- API Test Panel -->
             <div id="api-test" class="tab-panel">
                 <div class="card api-test">
                     <div class="card-header">
-                        <h3 class="card-title">聊天完成测试</h3>
+                        <h3 class="card-title">Chat Completion Test</h3>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="testModel">模型</label>
+                        <label class="form-label" for="testModel">Model</label>
                         <select id="testModel" class="form-input">
                             <option value="auto-chat">auto-chat</option>
                             <option value="claude-4.0">claude-4.0</option>
@@ -1483,36 +1663,36 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="testMessage">测试消息</label>
+                        <label class="form-label" for="testMessage">Test Message</label>
                         <textarea
                             id="testMessage"
                             class="form-input form-textarea"
-                            placeholder="输入测试消息..."
+                            placeholder="Enter test message..."
                             rows="3">Hello, what is 2+2?</textarea>
                     </div>
                     <div class="form-group">
                         <label class="form-label">
                             <input type="checkbox" id="testStream" style="margin-right: 0.5rem;">
-                            流式响应
+                            Streaming Response
                         </label>
                     </div>
-                    <button class="btn btn-primary" onclick="testAPI()">
-                        <i class="fas fa-paper-plane"></i> 发送测试
+                        <button class="btn btn-primary" onclick="testAPI()">
+                            <i class="fas fa-paper-plane"></i> Send Test
                     </button>
                     
                     <div class="form-group" style="margin-top: 1.5rem;">
-                        <label class="form-label">响应结果</label>
+                        <label class="form-label">Response</label>
                         <div id="testResult" class="code-block" style="min-height: 200px; background-color: #1e1e1e; color: #ffffff;">
-                            点击"发送测试"查看API响应...
+                            Click "Send Test" to see API response...
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">API 使用示例</h3>
+                        <h3 class="card-title">API Usage Examples</h3>
                     </div>
-                    <h4 style="margin-bottom: 1rem; color: var(--primary-color);">curl 示例:</h4>
+                    <h4 style="margin-bottom: 1rem; color: var(--primary-color);">curl Example:</h4>
                     <div class="code-block">curl -X POST "http://127.0.0.1:8001/codebuddy/v1/chat/completions" \
       -H "Authorization: Bearer YOUR_PASSWORD" \
       -H "Content-Type: application/json" \
@@ -1523,7 +1703,7 @@
         ]
       }'</div>
 
-                    <h4 style="margin: 1.5rem 0 1rem; color: var(--primary-color);">Python 示例:</h4>
+                    <h4 style="margin: 1.5rem 0 1rem; color: var(--primary-color);">Python Example:</h4>
                     <div class="code-block">import openai
 
     client = openai.OpenAI(
@@ -1542,25 +1722,25 @@
                 </div>
             </div>
 
-            <!-- 设置面板 -->
+            <!-- Settings Panel -->
             <div id="settings" class="tab-panel">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">服务配置</h3>
+                        <h3 class="card-title">Service Configuration</h3>
                     </div>
                     <div id="settingsForm">
-                        <!-- 表单内容将由JS动态生成 -->
-                         <div class="loading">
+                        <!-- Form content will be generated by JS -->
+                             <div class="loading">
                             <i class="fas fa-spinner fa-spin"></i>
-                            <div>加载配置中...</div>
+                            <div>Loading settings...</div>
                         </div>
                     </div>
                     <div style="margin-top: 1.5rem;">
                         <button class="btn btn-primary" onclick="saveSettings()">
-                            <i class="fas fa-save"></i> 保存设置
+                            <i class="fas fa-save"></i> Save Settings
                         </button>
                         <small style="display: block; margin-top: 1rem; color: var(--secondary-color);">
-                            注意：部分设置（如端口号）需要重启服务后才能生效。
+                            Note: Some settings (e.g., port) require a restart to take effect.
                         </small>
                     </div>
                 </div>
@@ -1568,29 +1748,24 @@
         </main>
     </div>
 
-    <!-- 通知区域 -->
+    <!-- Notification Area -->
     <div id="notification" class="notification"></div>
 
     <script>
-        // 全局变量
+        // Global variables
         let currentTheme = 'light';
         let servicePassword = '';
         let currentAuthData = null;
         let authPollingInterval = null;
         let isAuthenticated = false;
-        let credentialsCache = []; // 用于缓存凭证和其状态
+        let credentialsCache = []; // Cache credentials and their status
 
-        // 初始化
+        // Initialization
         document.addEventListener('DOMContentLoaded', function() {
             initializeTheme();
             showTab('dashboard');
             
-            // 设置服务启动时间
-            if (!sessionStorage.getItem('serviceStartTime')) {
-                sessionStorage.setItem('serviceStartTime', Date.now().toString());
-            }
-            
-            // 检查是否已经登录
+            // Check if already logged in
             const savedPassword = sessionStorage.getItem('servicePassword');
             if (savedPassword) {
                 servicePassword = savedPassword;
@@ -1601,28 +1776,28 @@
                 showLoginPage();
             }
 
-            // 添加键盘快捷键支持
+            // Add keyboard shortcuts support
             document.addEventListener('keydown', handleKeyboardShortcuts);
             
-            // 定期刷新仪表盘数据
+            // Periodically refresh dashboard data
             setInterval(() => {
                 if (isAuthenticated && document.getElementById('dashboard').classList.contains('active')) {
                     loadDashboard();
                 }
-            }, 30000); // 每30秒刷新一次
+            }, 30000); // Refresh every 30 seconds
         });
 
-        // 键盘快捷键处理
+        // Keyboard shortcuts handler
         function handleKeyboardShortcuts(e) {
             if (!isAuthenticated) return;
             
-            // Ctrl/Cmd + 数字键切换标签
+            // Ctrl/Cmd + number to switch tabs
             if ((e.ctrlKey || e.metaKey) && e.key >= '1' && e.key <= '4') {
                 e.preventDefault();
                 const tabs = ['dashboard', 'credentials', 'api-test', 'settings'];
                 const index = parseInt(e.key) - 1;
                 if (tabs[index]) {
-                    // 模拟点击标签
+                    // Simulate clicking tab
                     const tabElement = document.querySelector(`[onclick="showTab('${tabs[index]}')"]`);
                     if (tabElement) {
                         tabElement.click();
@@ -1630,7 +1805,7 @@
                 }
             }
             
-            // F5 刷新当前页面数据
+            // F5 refresh current tab data
             if (e.key === 'F5') {
                 e.preventDefault();
                 refreshCurrentTab();
@@ -1653,10 +1828,10 @@
                     loadSettings();
                     break;
             }
-            showNotification('数据已刷新', 'success', 2000);
+            showNotification('Data refreshed', 'success', 2000);
         }
 
-        // 添加视觉反馈
+        // Visual feedback
         function addVisualFeedback(element, type = 'success') {
             element.classList.add(`${type}-animation`);
             setTimeout(() => {
@@ -1664,7 +1839,7 @@
             }, 600);
         }
 
-        // 增强的通知系统
+        // Enhanced notification system
         function showNotificationWithAction(message, type = 'info', duration = 5000, action = null) {
             const notification = document.getElementById('notification');
             notification.className = `notification ${type}`;
@@ -1693,29 +1868,29 @@
             }, duration);
         }
 
-        // 增强的API错误处理
+        // Enhanced API error handling
         async function handleApiError(response, context = '') {
-            let errorMessage = `${context}失败`;
+            let errorMessage = `${context} failed`;
             try {
                 const errorData = await response.json();
                 errorMessage = errorData.detail || errorMessage;
             } catch (e) {
-                errorMessage = `${context}失败 (状态码: ${response.status})`;
+                errorMessage = `${context} failed (status: ${response.status})`;
             }
             
             if (response.status === 403 || response.status === 401) {
                 showNotificationWithAction(
-                    '认证已过期，需要重新登录', 
+                    'Authentication expired, please log in again', 
                     'error', 
                     10000,
-                    { text: '重新登录', callback: 'logout()' }
+                    { text: 'Log in again', callback: 'logout()' }
                 );
             } else {
                 showNotification(errorMessage, 'error');
             }
         }
 
-        // 主题切换
+        // Theme toggle
         function toggleTheme() {
             currentTheme = currentTheme === 'light' ? 'dark' : 'light';
             applyTheme(currentTheme);
@@ -1738,25 +1913,25 @@
             }
         }
 
-        // 标签页切换
+        // Tab switching
         function showTab(tabId) {
-            // 隐藏所有面板
+            // Hide all panels
             document.querySelectorAll('.tab-panel').forEach(panel => {
                 panel.classList.remove('active');
             });
             
-            // 移除所有标签的激活状态
+            // Remove active state from all tabs
             document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // 显示目标面板
+            // Show target panel
             document.getElementById(tabId).classList.add('active');
             
-            // 激活对应标签
+            // Activate corresponding tab
             event.target.classList.add('active');
             
-            // 加载对应数据
+            // Load corresponding data
             if (tabId === 'dashboard') {
                 loadDashboard();
             } else if (tabId === 'credentials') {
@@ -1766,7 +1941,7 @@
             }
         }
 
-        // 通知系统
+        // Notification system
         function showNotification(message, type = 'info', duration = 5000) {
             const notification = document.getElementById('notification');
             notification.className = `notification ${type}`;
@@ -1791,7 +1966,7 @@
             notification.classList.remove('show');
         }
 
-        // 登录与页面切换
+        // Login and page switching
         function showLoginPage() {
             document.getElementById('loginPage').classList.remove('hidden');
             document.getElementById('dashboardPage').classList.add('hidden');
@@ -1810,12 +1985,12 @@
             const loginError = document.getElementById('loginError');
 
             if (!password) {
-                showLoginError('请输入密码');
+                showLoginError('Please enter password');
                 return;
             }
 
             loginButton.disabled = true;
-            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 验证中...';
+            loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
             loginError.classList.add('hidden');
 
             try {
@@ -1823,22 +1998,25 @@
                     headers: { 'Authorization': `Bearer ${password}` }
                 });
 
-                if (testResponse.status !== 403) {
+                if (testResponse.ok) {
+                    // 200 = success
                     servicePassword = password;
                     isAuthenticated = true;
                     sessionStorage.setItem('servicePassword', password);
                     
                     showDashboardPage();
                     loadDashboard();
-                    showNotification('登录成功！', 'success');
+                    showNotification('Login successful!', 'success');
+                } else if (testResponse.status === 403) {
+                    showLoginError('Incorrect password, please try again');
                 } else {
-                    throw new Error('密码错误');
+                    showLoginError(`Server error (${testResponse.status}), please try again later`);
                 }
             } catch (error) {
-                showLoginError('密码错误，请重试');
+                showLoginError('Cannot connect to server, please check if the service is running');
             } finally {
                 loginButton.disabled = false;
-                loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登录';
+                loginButton.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
             }
         }
         
@@ -1853,10 +2031,10 @@
             isAuthenticated = false;
             sessionStorage.removeItem('servicePassword');
             showLoginPage();
-            showNotification('已退出登录', 'info');
+            showNotification('Logged out', 'info');
         }
 
-        // 获取认证头
+        // Get auth headers
         function getAuthHeaders() {
             return {
                 'Content-Type': 'application/json',
@@ -1864,70 +2042,75 @@
             };
         }
 
-        // 仪表板相关功能
+        // Dashboard functions
         async function loadDashboard() {
-            // 更新服务状态
+            // Load credential statistics and service status from /health (real state)
             try {
-                const response = await fetch('/health');
-                if (response.ok) {
-                    const data = await response.json();
-                    updateServiceStatus('online', '运行正常');
-                    updateServiceStatusCard('success');
-                } else {
-                    updateServiceStatus('warning', '服务异常');
-                    updateServiceStatusCard('warning');
-                }
-            } catch (error) {
-                updateServiceStatus('offline', '服务离线');
-                updateServiceStatusCard('error');
-                console.error('Failed to load service status:', error);
-            }
-
-            // 加载凭证统计
-            try {
-                const credResponse = await fetch('/codebuddy/v1/credentials', { 
-                    headers: getAuthHeaders() 
-                });
-                if (credResponse.ok) {
-                    const credData = await credResponse.json();
-                    const credentials = credData.credentials || [];
-                    const credCount = credentials.length;
-                    const validCreds = credentials.filter(c => !c.is_expired).length;
+                const healthResponse = await fetch('/health');
+                if (healthResponse.ok) {
+                    const healthData = await healthResponse.json();
+                    const credCount = healthData.total_credentials || 0;
+                    const validCreds = healthData.healthy_credentials || 0;
+                    const expiredCreds = healthData.expired_credentials || 0;
+                    const exhaustedCreds = healthData.exhausted_credentials || 0;
+                    const disabledCreds = healthData.disabled_credentials || 0;
                     
                     document.getElementById('totalCredentials').textContent = credCount;
                     document.getElementById('validCredentials').textContent = validCreds;
                     
-                    // 更新凭证使用率环形图
+                    // Update credential usage ring
                     updateUsageRing('credentialRingProgress', 'credentialUsagePercent', 
                                   validCreds, credCount, `${validCreds}/${credCount}`);
                     
-                    // 更新趋势指示
+                    // Update trend indicator with detailed breakdown
                     const credTrend = document.getElementById('credentialTrend');
-                    if (validCreds === credCount) {
+                    if (validCreds === credCount && credCount > 0) {
                         credTrend.className = 'stat-trend positive';
-                        credTrend.innerHTML = '<i class="fas fa-check"></i> 全部有效';
+                        credTrend.innerHTML = '<i class="fas fa-check"></i> All healthy';
                     } else if (validCreds === 0) {
                         credTrend.className = 'stat-trend negative';
-                        credTrend.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 无有效凭证';
+                        credTrend.innerHTML = '<i class="fas fa-exclamation-triangle"></i> No healthy credentials';
                     } else {
                         credTrend.className = 'stat-trend';
-                        credTrend.innerHTML = `<i class="fas fa-info-circle"></i> ${validCreds}个有效`;
+                        const parts = [];
+                        parts.push(`${validCreds} healthy`);
+                        if (expiredCreds > 0) parts.push(`${expiredCreds} expired`);
+                        if (exhaustedCreds > 0) parts.push(`${exhaustedCreds} exhausted`);
+                        if (disabledCreds > 0) parts.push(`${disabledCreds} disabled`);
+                        credTrend.innerHTML = `<i class="fas fa-info-circle"></i> ${parts.join(', ')}`;
+                    }
+
+                    // Update service status from health data
+                    const srvStatus = healthData.status;
+                    if (srvStatus === 'healthy') {
+                        updateServiceStatus('online', 'Running normally');
+                        updateServiceStatusCard('success', healthData.server_uptime_seconds);
+                    } else if (srvStatus === 'degraded') {
+                        updateServiceStatus('warning', 'Degraded');
+                        updateServiceStatusCard('warning', healthData.server_uptime_seconds);
+                    } else {
+                        updateServiceStatus('offline', 'Critical');
+                        updateServiceStatusCard('error', healthData.server_uptime_seconds);
                     }
                 } else {
                     document.getElementById('totalCredentials').textContent = 'N/A';
                     document.getElementById('validCredentials').textContent = '0';
+                    updateServiceStatus('warning', 'Service issue');
+                    updateServiceStatusCard('warning', 0);
                 }
             } catch (error) {
-                console.error('Failed to load credentials count:', error);
-                document.getElementById('totalCredentials').textContent = '错误';
+                console.error('Failed to load health data:', error);
+                document.getElementById('totalCredentials').textContent = 'Error';
                 document.getElementById('validCredentials').textContent = '0';
+                updateServiceStatus('offline', 'Service offline');
+                updateServiceStatusCard('error', 0);
             }
 
-            // 设置API端点
+            // Set API endpoint
             const apiEndpoint = window.location.origin + '/codebuddy/v1';
             document.getElementById('apiEndpoint').textContent = apiEndpoint;
 
-            // 加载使用统计
+            // Load usage stats
             try {
                 const statsResponse = await fetch('/api/stats', { headers: getAuthHeaders() });
                 if (statsResponse.ok) {
@@ -1940,19 +2123,29 @@
             } catch (error) {
                 console.error('Failed to load usage stats:', error);
             }
+
+            loadHourlyHistory();
         }
 
-        function updateServiceStatusCard(status) {
+        function updateServiceStatusCard(status, uptimeSeconds) {
             const statusIcon = document.getElementById('serviceStatusIcon');
             statusIcon.className = 'stat-card-icon ' + status;
             
-            // 更新运行时长（模拟）
+            // Update uptime from backend
             const uptime = document.getElementById('uptime');
-            const startTime = sessionStorage.getItem('serviceStartTime') || Date.now();
-            const duration = Date.now() - startTime;
-            const hours = Math.floor(duration / (1000 * 60 * 60));
-            const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
-            uptime.textContent = `${hours}h ${minutes}m`;
+            if (uptimeSeconds != null && uptimeSeconds > 0) {
+                const totalSeconds = Math.floor(uptimeSeconds);
+                const days = Math.floor(totalSeconds / 86400);
+                const hours = Math.floor((totalSeconds % 86400) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const parts = [];
+                if (days > 0) parts.push(`${days}d`);
+                parts.push(`${hours}h`);
+                parts.push(`${minutes}m`);
+                uptime.textContent = parts.join(' ');
+            } else {
+                uptime.textContent = 'Starting...';
+            }
         }
 
         function updateUsageRing(progressId, textId, current, total, displayText) {
@@ -1973,7 +2166,7 @@
         function updateDashboardStats(statsData) {
             const { model_usage, credential_usage } = statsData;
             
-            // 计算总API调用次数
+            // Calculate total API calls
             let totalCalls = 0;
             if (model_usage) {
                 totalCalls = Object.values(model_usage).reduce((sum, count) => sum + count, 0);
@@ -1981,8 +2174,8 @@
             
             document.getElementById('totalApiCalls').textContent = totalCalls.toLocaleString();
             
-            // 更新使用率环形图（基于今日调用次数的目标）
-            const dailyTarget = 1000; // 假设日目标1000次
+            // Update usage ring (based on today's target)
+            const dailyTarget = 1000; // Assume daily target 1000
             updateUsageRing('usageRingProgress', 'totalUsagePercent', 
                           totalCalls % dailyTarget, dailyTarget, totalCalls.toString());
         }
@@ -1991,49 +2184,49 @@
             const statusDot = document.getElementById('statusDot');
             const statusText = document.getElementById('statusText');
             
-            // 移除所有状态类
+            // Remove all status classes
             statusDot.classList.remove('online', 'offline', 'warning');
-            // 添加新状态类
+            // Add new status class
             statusDot.classList.add(status);
-            // 更新文本
+            // Update text
             statusText.textContent = text;
         }
 
         function refreshDashboard() {
-            // 显示刷新状态
+            // Show refresh state
             document.getElementById('totalCredentials').textContent = '-';
-            updateServiceStatus('warning', '刷新中...');
+            updateServiceStatus('warning', 'Refreshing...');
             document.getElementById('apiEndpoint').textContent = '-';
             
-            // 重新加载数据
+            // Reload data
             loadDashboard();
-            showNotification('仪表板数据已刷新', 'success');
+            showNotification('Dashboard data refreshed', 'success');
         }
 
         function copyApiEndpoint() {
             const apiEndpoint = document.getElementById('apiEndpoint').textContent;
             if (apiEndpoint && apiEndpoint !== '-') {
                 navigator.clipboard.writeText(apiEndpoint).then(() => {
-                    showNotification('API端点已复制到剪贴板', 'success');
+                    showNotification('API endpoint copied to clipboard', 'success');
                 }).catch(() => {
-                    // 降级方案
+                    // Fallback approach
                     const textArea = document.createElement('textarea');
                     textArea.value = apiEndpoint;
                     document.body.appendChild(textArea);
                     textArea.select();
                     document.execCommand('copy');
                     document.body.removeChild(textArea);
-                    showNotification('API端点已复制到剪贴板', 'success');
+                    showNotification('API endpoint copied to clipboard', 'success');
                 });
             } else {
-                showNotification('API端点尚未加载', 'warning');
-            }
+                showNotification('API endpoint not loaded yet', 'warning');
+        }
         }
 
-        // 凭证管理功能
+        // Credential management functions
         async function loadCredentials() {
             const credentialsList = document.getElementById('credentialsList');
-            credentialsList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><div>加载中...</div></div>';
+            credentialsList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><div>Loading...</div></div>';
             
             try {
                 const response = await fetch('/codebuddy/v1/credentials', { 
@@ -2042,18 +2235,18 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    // 初始化凭证缓存
+                    // Initialize credential cache
                     credentialsCache = (data.credentials || []).map(cred => ({...cred, status: 'unknown'}));
                     displayCredentials();
-                    loadCurrentCredentialStatus(); // 加载当前状态
+                    loadCurrentCredentialStatus(); // Load current status
                 } else if (response.status === 403) {
-                    credentialsList.innerHTML = '<div class="status status-error">认证失败，请重新登录</div>';
+                    credentialsList.innerHTML = '<div class="status status-error">Authentication failed, please log in again</div>';
                     logout();
                 } else {
-                    credentialsList.innerHTML = `<div class="status status-error">加载失败: ${response.status}</div>`;
+                    credentialsList.innerHTML = `<div class="status status-error">Load failed: ${response.status}</div>`;
                 }
             } catch (error) {
-                credentialsList.innerHTML = `<div class="status status-error">网络错误: ${error.message}</div>`;
+                credentialsList.innerHTML = `<div class="status status-error">Network error: ${error.message}</div>`;
             }
         }
 
@@ -2069,15 +2262,15 @@
                     const data = await response.json();
                     displayCurrentCredentialStatus(data);
                 } else {
-                    statusDiv.innerHTML = '<div class="status status-error">无法获取当前状态</div>';
+                    statusDiv.innerHTML = '<div class="status status-error">Unable to get current status</div>';
                 }
             } catch (error) {
-                statusDiv.innerHTML = '<div class="status status-error">网络错误</div>';
+                statusDiv.innerHTML = '<div class="status status-error">Network error</div>';
             }
         }
 
         function displayCurrentCredentialStatus(data) {
-            // 保存状态信息供其他函数使用
+            // Save status info for other functions
             window.lastCredentialStatus = data;
             
             const statusDiv = document.getElementById('currentCredentialStatus');
@@ -2091,11 +2284,11 @@
                     statusIcon = 'fas fa-hand-pointer';
                     statusHtml = `
                         <div class="status ${statusClass}">
-                            <i class="${statusIcon}"></i> 手动选择模式
+                            <i class="${statusIcon}"></i> Manual selection mode
                         </div>
                         <div style="margin-top: 0.5rem; font-size: 0.9rem;">
-                            当前使用: <strong>${data.filename}</strong> (凭证 #${data.index + 1})
-                            ${data.user_id !== 'unknown' ? `<br>用户ID: ${data.user_id}` : ''}
+                            Current: <strong>${data.filename}</strong> (Credential #${data.index + 1})
+                            ${data.user_id !== 'unknown' ? `<br>User ID: ${data.user_id}` : ''}
                         </div>
                     `;
                     break;
@@ -2104,12 +2297,12 @@
                     statusIcon = 'fas fa-pause';
                     statusHtml = `
                         <div class="status ${statusClass}">
-                            <i class="${statusIcon}"></i> 自动轮换已关闭
+                            <i class="${statusIcon}"></i> Auto rotation disabled
                         </div>
                         <div style="margin-top: 0.5rem; font-size: 0.9rem;">
-                            固定使用: <strong>${data.filename}</strong> (凭证 #${data.index + 1})
-                            <br>轮换次数: ${data.rotation_count}
-                            ${data.user_id !== 'unknown' ? `<br>用户ID: ${data.user_id}` : ''}
+                            Using fixed: <strong>${data.filename}</strong> (Credential #${data.index + 1})
+                            <br>Rotation count: ${data.rotation_count}
+                            ${data.user_id !== 'unknown' ? `<br>User ID: ${data.user_id}` : ''}
                         </div>
                     `;
                     break;
@@ -2118,12 +2311,12 @@
                     statusIcon = 'fas fa-ban';
                     statusHtml = `
                         <div class="status ${statusClass}">
-                            <i class="${statusIcon}"></i> 轮换次数为0
+                            <i class="${statusIcon}"></i> Rotation count is 0
                         </div>
                         <div style="margin-top: 0.5rem; font-size: 0.9rem;">
-                            固定使用: <strong>${data.filename}</strong> (凭证 #${data.index + 1})
-                            <br>轮换次数设为0，不进行轮换
-                            ${data.user_id !== 'unknown' ? `<br>用户ID: ${data.user_id}` : ''}
+                            Using fixed: <strong>${data.filename}</strong> (Credential #${data.index + 1})
+                            <br>Rotation count set to 0, no rotation
+                            ${data.user_id !== 'unknown' ? `<br>User ID: ${data.user_id}` : ''}
                         </div>
                     `;
                     break;
@@ -2132,12 +2325,12 @@
                     statusIcon = 'fas fa-sync-alt';
                     statusHtml = `
                         <div class="status ${statusClass}">
-                            <i class="${statusIcon}"></i> 自动轮换模式
+                            <i class="${statusIcon}"></i> Auto rotation mode
                         </div>
                         <div style="margin-top: 0.5rem; font-size: 0.9rem;">
-                            当前使用: <strong>${data.filename}</strong> (凭证 #${data.index + 1})
-                            <br>使用次数: ${data.usage_count}/${data.rotation_count}
-                            ${data.user_id !== 'unknown' ? `<br>用户ID: ${data.user_id}` : ''}
+                            Current: <strong>${data.filename}</strong> (Credential #${data.index + 1})
+                            <br>Usage: ${data.usage_count}/${data.rotation_count}
+                            ${data.user_id !== 'unknown' ? `<br>User ID: ${data.user_id}` : ''}
                         </div>
                     `;
                     break;
@@ -2146,194 +2339,243 @@
                     statusIcon = 'fas fa-exclamation-triangle';
                     statusHtml = `
                         <div class="status ${statusClass}">
-                            <i class="${statusIcon}"></i> 无可用凭证
+                            <i class="${statusIcon}"></i> No available credentials
                         </div>
                         <div style="margin-top: 0.5rem; font-size: 0.9rem;">
-                            请添加至少一个有效的凭证
+                            Please add at least one valid credential
                         </div>
                     `;
                     break;
                 default:
-                    statusHtml = '<div class="status status-error">未知状态</div>';
+                    statusHtml = '<div class="status status-error">Unknown status</div>';
             }
 
             statusDiv.innerHTML = statusHtml;
             
-            // 更新按钮状态
+            // Update button status
             updateRotationToggleButton(data);
         }
 
         function displayCredentials() {
+            applyFleetFilters();
+        }
+
+        function applyFleetFilters() {
             const credentialsList = document.getElementById('credentialsList');
-            // 分组渲染：按邮箱或用户ID分组，添加删除按钮
-            if (credentialsCache && Array.isArray(credentialsCache) && credentialsCache.length > 0) {
-                const groups = {};
-                credentialsCache.forEach((cred, index) => {
-                    const key = cred.email || cred.user_id || 'unknown';
-                    if (!groups[key]) groups[key] = [];
-                    groups[key].push({ cred, index });
-                });
-                
-                // 获取当前选中的凭证索引 - 修复刷新后丢失问题
-                let currentSelectedIndex = -1;
-                try {
-                    const currentStatus = window.lastCredentialStatus || {};
-                    currentSelectedIndex = currentStatus.index || -1;
-                    
-                    // 如果没有缓存状态，重新获取
-                    if (currentSelectedIndex === -1 && !window.lastCredentialStatus) {
-                        loadCurrentCredentialStatus().then(() => {
-                            // 状态加载完成后重新渲染
-                            displayCredentials();
-                        });
-                        return; // 等待状态加载完成
-                    }
-                } catch (e) {
-                    // 忽略错误，尝试重新获取状态
-                    loadCurrentCredentialStatus();
+            if (!credentialsCache || !Array.isArray(credentialsCache) || credentialsCache.length === 0) {
+                credentialsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--secondary-color);">No credentials yet, please add the first credential</div>';
+                document.getElementById('fleetSummary').textContent = '';
+                updateFleetAlertBanner();
+                return;
+            }
+
+            const searchTerm = (document.getElementById('fleetSearch').value || '').toLowerCase().trim();
+            const filterVal = document.getElementById('fleetFilter').value;
+            const sortVal = document.getElementById('fleetSort').value;
+
+            let currentSelectedIndex = -1;
+            try {
+                const currentStatus = window.lastCredentialStatus || {};
+                currentSelectedIndex = currentStatus.index || -1;
+                if (currentSelectedIndex === -1 && !window.lastCredentialStatus) {
+                    loadCurrentCredentialStatus().then(() => { applyFleetFilters(); });
+                    return;
                 }
+            } catch (e) {
+                loadCurrentCredentialStatus();
+            }
 
-                const groupKeys = Object.keys(groups).sort((a, b) => a.localeCompare(b));
-                let html = '';
-                groupKeys.forEach(key => {
-                    const items = groups[key];
-                    const label = key === 'unknown' ? '未知用户' : (key.includes('@') ? key : `ID: ${key}`);
-                    const icon = key.includes('@') ? 'fas fa-envelope' : 'fas fa-user';
-                    
-                    html += `
-                        <div class="credential-group">
-                            <div class="credential-group-header">
-                                <div class="credential-group-title">
-                                    <i class="${icon}"></i>
-                                    ${label}
-                                </div>
-                                <div class="credential-group-badge">${items.length} 个凭证</div>
-                            </div>
-                            <div class="credential-group-list">
-                    `;
+            let filtered = credentialsCache.map((cred, index) => ({ cred, index }));
 
-                    html += items.map(({ cred, index }) => {
-                        // 确定凭证状态和头像样式
-                        let avatarClass = 'unknown';
-                        let avatarText = '?';
-                        if (cred.is_expired) {
-                            avatarClass = 'expired';
-                            avatarText = '!';
-                        } else if (cred.status === 'valid') {
-                            avatarClass = 'valid';
-                            avatarText = '✓';
-                        }
-
-                        // 检查是否为当前选中的凭证
-                        const isSelected = index === currentSelectedIndex;
-                        const selectedClass = isSelected ? ' credential-item-selected' : '';
-                        const selectedBadge = isSelected ? '<span class="credential-selected-badge">当前使用</span>' : '';
-
-                        // 格式化时间信息
-                        const expiryInfo = cred.expires_at ? new Date(cred.expires_at * 1000).toLocaleDateString() : '永不过期';
-                        const remainingTime = cred.time_remaining_str || '未知';
-
-                        return `
-                            <div class="credential-item${selectedClass}">
-                                <div class="credential-avatar ${avatarClass}">${avatarText}</div>
-                                <div class="credential-info">
-                                    <div class="credential-header">
-                                        <div class="credential-title">凭证 #${index + 1}</div>
-                                        ${selectedBadge}
-                                    </div>
-                                    <div class="credential-meta">
-                                        ${cred.user_id && cred.user_id !== 'unknown' ? 
-                                            `<div class="credential-meta-item">
-                                                <i class="fas fa-user"></i> ${cred.user_id}
-                                            </div>` : ''
-                                        }
-                                        <div class="credential-meta-item">
-                                            <i class="fas fa-calendar"></i> 过期: ${expiryInfo}
-                                        </div>
-                                        <div class="credential-meta-item">
-                                            <i class="fas fa-clock"></i> 剩余: ${remainingTime}
-                                        </div>
-                                        ${cred.filename ? 
-                                            `<div class="credential-meta-item">
-                                                <i class="fas fa-file"></i> ${cred.filename}
-                                            </div>` : ''
-                                        }
-                                    </div>
-                                </div>
-                                <div class="credential-actions">
-                                    ${!isSelected ? 
-                                        `<button class="btn btn-primary" onclick="selectCredential(${index})" title="选择此凭证">
-                                            <i class="fas fa-hand-pointer"></i>
-                                        </button>` : ''
-                                    }
-                                    <button class="btn btn-success" onclick="testCredential(${index})" title="测试凭证">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="btn btn-danger" onclick="deleteCredential(${index})" title="删除凭证">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-
-                    html += `
-                            </div>
-                        </div>
-                    `;
+            if (searchTerm) {
+                filtered = filtered.filter(({ cred }) => {
+                    const email = (cred.email || '').toLowerCase();
+                    const filename = (cred.filename || cred.credential_id || '').toLowerCase();
+                    const userId = (cred.user_id || '').toLowerCase();
+                    return email.includes(searchTerm) || filename.includes(searchTerm) || userId.includes(searchTerm);
                 });
-
-                credentialsList.innerHTML = html;
-                return;
-            }
-            
-            if (credentialsCache.length === 0) {
-                credentialsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--secondary-color);">暂无凭证，请添加第一个凭证</div>';
-                return;
             }
 
-            credentialsList.innerHTML = '<div class="credential-list">' +
-                credentialsCache.map((cred, index) => {
-                    let statusIcon = '';
-                    switch(cred.status) {
-                        case 'valid':
-                            statusIcon = `<i class="fas fa-check-circle" style="color: var(--success-color); font-size: 1.5rem;" title="有效"></i>`;
-                            break;
-                        case 'invalid':
-                            statusIcon = `<i class="fas fa-times-circle" style="color: var(--error-color); font-size: 1.5rem;" title="无效"></i>`;
-                            break;
-                        default:
-                            statusIcon = `<i class="fas fa-question-circle" style="color: var(--secondary-color); font-size: 1.5rem;" title="未验证"></i>`;
+            if (filterVal !== 'all') {
+                filtered = filtered.filter(({ cred }) => {
+                    switch (filterVal) {
+                        case 'healthy': return !cred.is_expired && !cred.is_exhausted && !cred.is_disabled;
+                        case 'exhausted': return cred.is_exhausted;
+                        case 'expired': return cred.is_expired;
+                        case 'disabled': return cred.is_disabled;
+                        default: return true;
                     }
+                });
+            }
+
+            if (sortVal === 'email') {
+                filtered.sort((a, b) => (a.cred.email || '').localeCompare(b.cred.email || ''));
+            } else if (sortVal === 'filename') {
+                filtered.sort((a, b) => (a.cred.filename || '').localeCompare(b.cred.filename || ''));
+            }
+
+            const totalCount = credentialsCache.length;
+            const healthyCount = credentialsCache.filter(c => !c.is_expired && !c.is_exhausted && !c.is_disabled).length;
+            const exhaustedCount = credentialsCache.filter(c => c.is_exhausted).length;
+            const expiredCount = credentialsCache.filter(c => c.is_expired).length;
+            const disabledCount = credentialsCache.filter(c => c.is_disabled).length;
+
+            document.getElementById('fleetSummary').textContent =
+                `Showing ${filtered.length} of ${totalCount} — ${healthyCount} healthy, ${exhaustedCount} exhausted, ${expiredCount} expired, ${disabledCount} disabled`;
+
+            updateFleetAlertBanner(totalCount, healthyCount, exhaustedCount);
+
+            if (filtered.length === 0) {
+                credentialsList.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--secondary-color);">No credentials match the current filter</div>';
+                return;
+            }
+
+            const groups = {};
+            filtered.forEach(item => {
+                const key = item.cred.email || item.cred.user_id || 'unknown';
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(item);
+            });
+
+            const groupKeys = Object.keys(groups).sort((a, b) => a.localeCompare(b));
+            let html = '';
+            groupKeys.forEach(key => {
+                const items = groups[key];
+                const label = key === 'unknown' ? 'Unknown user' : (key.includes('@') ? key : `ID: ${key}`);
+                const icon = key.includes('@') ? 'fas fa-envelope' : 'fas fa-user';
+
+                html += `
+                    <div class="credential-group">
+                        <div class="credential-group-header">
+                            <div class="credential-group-title"><i class="${icon}"></i> ${label}</div>
+                            <div class="credential-group-badge">${items.length} credentials</div>
+                        </div>
+                        <div class="credential-group-list">
+                `;
+
+                html += items.map(({ cred, index }) => {
+                    let avatarClass = 'unknown';
+                    let avatarText = '?';
+                    if (cred.is_disabled) {
+                        avatarClass = 'expired';
+                        avatarText = '⏸';
+                    } else if (cred.is_expired) {
+                        avatarClass = 'expired';
+                        avatarText = '!';
+                    } else if (cred.is_exhausted) {
+                        avatarClass = 'expired';
+                        avatarText = '⚠';
+                    } else if (cred.status === 'valid') {
+                        avatarClass = 'valid';
+                        avatarText = '✓';
+                    }
+
+                    const isSelected = index === currentSelectedIndex;
+                    let extraClasses = isSelected ? ' credential-item-selected' : '';
+                    if (cred.is_disabled) extraClasses += ' credential-item-disabled';
+                    else if (cred.is_exhausted) extraClasses += ' credential-item-exhausted';
+
+                    const selectedBadge = isSelected ? '<span class="credential-selected-badge">Current</span>' : '';
+                    const disabledBadge = cred.is_disabled ? '<span class="credential-disabled-badge">Disabled</span>' : '';
+                    const exhaustedBadge = (!cred.is_disabled && cred.is_exhausted) ? '<span class="credential-exhausted-badge">Exhausted</span>' : '';
+
+                    const expiryInfo = cred.expires_at ? new Date(cred.expires_at * 1000).toLocaleDateString() : 'Never expires';
+                    const remainingTime = cred.time_remaining_str || 'Unknown';
+                    const credId = cred.credential_id || cred.filename;
+
+                    const disableBtn = cred.is_disabled
+                        ? `<button class="btn btn-success" onclick="toggleDisableCredential('${credId}', false)" title="Enable"><i class="fas fa-play"></i></button>`
+                        : `<button class="btn btn-secondary" onclick="toggleDisableCredential('${credId}', true)" title="Disable"><i class="fas fa-pause"></i></button>`;
 
                     return `
-                    <div class="credential-item">
-                        <div class="credential-status-icon">${statusIcon}</div>
-                        <div class="credential-info">
-                            <div class="credential-id">凭证 #${index + 1}</div>
-                            <div class="credential-details">
-                                ${cred.user_id ? `用户ID: ${cred.user_id}<br>` : ''}
-                                ${cred.token_preview ? `Token: ${cred.token_preview}<br>` : ''}
-                                ${cred.created_at ? `创建时间: ${new Date(cred.created_at * 1000).toLocaleString()}<br>` : ''}
-                                过期时间: ${cred.expires_at != null ? new Date(cred.expires_at * 1000).toLocaleString() : 'null'}<br>
-                                剩余: ${cred.time_remaining_str || 'null'}
+                        <div class="credential-item${extraClasses}">
+                            <div class="credential-avatar ${avatarClass}">${avatarText}</div>
+                            <div class="credential-info">
+                                <div class="credential-header">
+                                    <div class="credential-title">Credential #${index + 1}</div>
+                                    ${selectedBadge}${disabledBadge}${exhaustedBadge}
+                                </div>
+                                <div class="credential-meta">
+                                    ${cred.user_id && cred.user_id !== 'unknown' ?
+                                        `<div class="credential-meta-item"><i class="fas fa-user"></i> ${cred.user_id}</div>` : ''}
+                                    <div class="credential-meta-item"><i class="fas fa-calendar"></i> Expiry: ${expiryInfo}</div>
+                                    <div class="credential-meta-item"><i class="fas fa-clock"></i> Remaining: ${remainingTime}</div>
+                                    ${cred.filename ?
+                                        `<div class="credential-meta-item"><i class="fas fa-file"></i> ${cred.filename}</div>` : ''}
+                                </div>
+                            </div>
+                            <div class="credential-actions">
+                                ${!isSelected ?
+                                    `<button class="btn btn-primary" onclick="selectCredential(${index})" title="Select"><i class="fas fa-hand-pointer"></i></button>` : ''}
+                                ${disableBtn}
+                                <button class="btn btn-success" onclick="testCredential(${index})" title="Test"><i class="fas fa-check"></i></button>
+                                <button class="btn btn-danger" onclick="deleteCredential(${index})" title="Delete"><i class="fas fa-trash"></i></button>
                             </div>
                         </div>
-                        <div class="credential-actions">
-                            <button class="btn btn-warning" onclick="selectCredential(${index})" title="手动选择此凭证">
-                                <i class="fas fa-hand-pointer"></i> 选择
-                            </button>
-                            <button class="btn btn-success" onclick="testCredential(${index})">
-                                <i class="fas fa-check"></i> 测试
-                            </button>
-                        </div>
-                    </div>
-                `}).join('') +
-            '</div>';
+                    `;
+                }).join('');
+
+                html += `</div></div>`;
+            });
+
+            credentialsList.innerHTML = html;
+        }
+
+        function updateFleetAlertBanner(total, healthy, exhausted) {
+            const banner = document.getElementById('fleetAlertBanner');
+            if (!banner) return;
+            if (total === undefined) {
+                const t = credentialsCache.length;
+                const h = credentialsCache.filter(c => !c.is_expired && !c.is_exhausted && !c.is_disabled).length;
+                const e = credentialsCache.filter(c => c.is_exhausted).length;
+                total = t; healthy = h; exhausted = e;
+            }
+            if (total === 0) {
+                banner.innerHTML = `<div class="alert-banner alert-critical"><i class="fas fa-exclamation-circle"></i> No credentials loaded. Add credentials to start using the service.</div>`;
+                return;
+            }
+            if (healthy === 0) {
+                banner.innerHTML = `<div class="alert-banner alert-critical"><i class="fas fa-exclamation-circle"></i> CRITICAL: 0 healthy credentials! All ${total} keys are expired, exhausted, or disabled.</div>`;
+                return;
+            }
+            const pct = healthy / total;
+            if (pct < 0.2) {
+                banner.innerHTML = `<div class="alert-banner alert-warning"><i class="fas fa-exclamation-triangle"></i> Warning: Only ${healthy} of ${total} credentials healthy (${Math.round(pct * 100)}%). Consider adding more keys.</div>`;
+                return;
+            }
+            if (exhausted > 0) {
+                banner.innerHTML = `<div class="alert-banner alert-info"><i class="fas fa-info-circle"></i> ${exhausted} credential(s) currently exhausted (auto-recover after cooldown).</div>`;
+                return;
+            }
+            banner.innerHTML = '';
+        }
+
+        async function toggleDisableCredential(credentialId, disable) {
+            const endpoint = disable ? '/codebuddy/v1/credentials/disable' : '/codebuddy/v1/credentials/enable';
+            const action = disable ? 'Disabling' : 'Enabling';
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ credential_id: credentialId })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    showNotification(data.message || `${action} succeeded`, 'success');
+                    const idx = credentialsCache.findIndex(c => (c.credential_id || c.filename) === credentialId);
+                    if (idx !== -1) credentialsCache[idx].is_disabled = disable;
+                    applyFleetFilters();
+                } else {
+                    const err = await response.json();
+                    showNotification(`${action} failed: ${err.detail || response.status}`, 'error');
+                }
+            } catch (error) {
+                showNotification(`${action} failed: ${error.message}`, 'error');
+            }
         }
 
         async function deleteCredential(index) {
-            if (!confirm(`确定要删除凭证 #${index + 1} 吗？此操作不可恢复。`)) return;
+            if (!confirm(`Are you sure you want to delete credential #${index + 1}? This cannot be undone.`)) return;
             try {
                 const response = await fetch('/codebuddy/v1/credentials/delete', {
                     method: 'POST',
@@ -2342,16 +2584,16 @@
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    showNotification(data.message || '删除成功', 'success');
+                    showNotification(data.message || 'Deleted successfully', 'success');
                     await loadCredentials();
                     await loadCurrentCredentialStatus();
                 } else {
                     const err = await response.json();
-                    showNotification(`删除失败: ${err.detail || response.status}`, 'error');
+                    showNotification(`Delete failed: ${err.detail || response.status}`, 'error');
                 }
             } catch (error) {
-                showNotification(`删除失败: ${error.message}`, 'error');
-            }
+                showNotification(`Delete failed: ${error.message}`, 'error');
+        }
         }
 
         async function addCredential() {
@@ -2359,7 +2601,7 @@
             const userId = document.getElementById('userId').value.trim();
 
             if (!bearerToken) {
-                showNotification('请输入 Bearer Token', 'error');
+                showNotification('Please enter Bearer Token', 'error');
                 return;
             }
 
@@ -2375,21 +2617,21 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    showNotification('凭证添加成功！', 'success');
+                    showNotification('Credential added successfully!', 'success');
                     document.getElementById('bearerToken').value = '';
                     document.getElementById('userId').value = '';
                     loadCredentials();
                 } else {
                     const errorData = await response.json();
-                    showNotification(`添加失败: ${errorData.detail || '未知错误'}`, 'error');
+                    showNotification(`Add failed: ${errorData.detail || 'Unknown error'}`, 'error');
                 }
             } catch (error) {
-                showNotification(`网络错误: ${error.message}`, 'error');
-            }
+                showNotification(`Network error: ${error.message}`, 'error');
+        }
         }
 
         async function selectCredential(index) {
-            showNotification(`正在选择凭证 #${index + 1}...`, 'info');
+            showNotification(`Selecting credential #${index + 1}...`, 'info');
             
             try {
                 const response = await fetch('/codebuddy/v1/credentials/select', {
@@ -2401,14 +2643,14 @@
                 if (response.ok) {
                     const data = await response.json();
                     showNotification(`✓ ${data.message}`, 'success');
-                    await loadCurrentCredentialStatus(); // 刷新状态显示
-                    displayCredentials(); // 刷新凭证列表显示
+                    await loadCurrentCredentialStatus(); // Refresh status display
+                    displayCredentials(); // Refresh credential list display
                 } else {
                     const errorData = await response.json();
-                    showNotification(`选择失败: ${errorData.detail}`, 'error');
+                    showNotification(`Selection failed: ${errorData.detail}`, 'error');
                 }
             } catch (error) {
-                showNotification(`网络错误: ${error.message}`, 'error');
+                showNotification(`Network error: ${error.message}`, 'error');
             }
         }
 
@@ -2416,22 +2658,22 @@
             const btn = document.getElementById('rotationToggleBtn');
             if (!btn) return;
             
-            // 根据当前状态更新按钮文本和图标
+            // Update button text/icon based on current state
             if (data.status === 'manual_selected') {
-                // 手动选择模式，显示恢复自动轮换按钮
-                btn.innerHTML = '<i class="fas fa-undo"></i> 恢复自动轮换';
+                // Manual selection mode, show resume auto-rotation
+                btn.innerHTML = '<i class="fas fa-undo"></i> Resume Auto Rotation';
                 btn.className = 'btn btn-secondary';
             } else if (data.auto_rotation_enabled === false) {
-                // 自动轮换已关闭，显示开启按钮
-                btn.innerHTML = '<i class="fas fa-play"></i> 开启自动轮换';
+                // Auto rotation off, show enable button
+                btn.innerHTML = '<i class="fas fa-play"></i> Enable Auto Rotation';
                 btn.className = 'btn btn-success';
             } else if (data.auto_rotation_enabled === true) {
-                // 自动轮换已开启，显示关闭按钮
-                btn.innerHTML = '<i class="fas fa-pause"></i> 关闭自动轮换';
+                // Auto rotation on, show disable button
+                btn.innerHTML = '<i class="fas fa-pause"></i> Disable Auto Rotation';
                 btn.className = 'btn btn-warning';
             } else {
-                // 默认状态
-                btn.innerHTML = '<i class="fas fa-undo"></i> 恢复自动轮换';
+                // Default state
+                btn.innerHTML = '<i class="fas a-undo"></i> Resume Auto Rotation';
                 btn.className = 'btn btn-secondary';
             }
         }
@@ -2441,22 +2683,22 @@
             const originalHtml = btn.innerHTML;
             
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             
             try {
-                // 先获取当前状态
+                // First get current status
                 const statusResponse = await fetch('/codebuddy/v1/credentials/current', {
                     headers: getAuthHeaders()
                 });
                 
                 if (!statusResponse.ok) {
-                    throw new Error('无法获取当前状态');
+                        throw new Error('Unable to get current status');
                 }
                 
                 const statusData = await statusResponse.json();
                 
                 if (statusData.status === 'manual_selected') {
-                    // 如果是手动选择状态，先清除手动选择
+                    // If manual selection, clear it first
                     const response = await fetch('/codebuddy/v1/credentials/auto', {
                         method: 'POST',
                         headers: getAuthHeaders()
@@ -2466,10 +2708,10 @@
                         const data = await response.json();
                         showNotification(`✓ ${data.message}`, 'success');
                     } else {
-                        throw new Error('恢复自动轮换失败');
+                        throw new Error('Failed to resume auto rotation');
                     }
                 } else {
-                    // 否则切换自动轮换开关
+                    // Otherwise toggle auto rotation
                     const response = await fetch('/codebuddy/v1/credentials/toggle-rotation', {
                         method: 'POST',
                         headers: getAuthHeaders()
@@ -2479,16 +2721,16 @@
                         const data = await response.json();
                         showNotification(`✓ ${data.message}`, 'success');
                     } else {
-                        throw new Error('切换自动轮换失败');
-                    }
+                        throw new Error('Failed to toggle auto rotation');
+                }
                 }
                 
-                // 刷新状态显示和凭证列表
+                // Refresh status display and credential list
                 await loadCurrentCredentialStatus();
                 displayCredentials();
                 
             } catch (error) {
-                showNotification(`操作失败: ${error.message}`, 'error');
+                showNotification(`Operation failed: ${error.message}`, 'error');
                 btn.innerHTML = originalHtml;
             } finally {
                 btn.disabled = false;
@@ -2496,7 +2738,7 @@
         }
         
         async function resumeAutoRotation() {
-            showNotification('正在恢复自动轮换...', 'info');
+            showNotification('Resuming auto rotation...', 'info');
             
             try {
                 const response = await fetch('/codebuddy/v1/credentials/auto', {
@@ -2506,56 +2748,54 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    showNotification(`✓ ${data.message}`, 'success');
-                    loadCurrentCredentialStatus(); // 刷新状态显示
+                        showNotification(`✓ ${data.message}`, 'success');
+                    loadCurrentCredentialStatus(); // Refresh status display
                 } else {
                     const errorData = await response.json();
-                    showNotification(`恢复失败: ${errorData.detail}`, 'error');
+                    showNotification(`Resume failed: ${errorData.detail}`, 'error');
                 }
             } catch (error) {
-                showNotification(`网络错误: ${error.message}`, 'error');
+                showNotification(`Network error: ${error.message}`, 'error');
             }
         }
 
         async function testCredential(index) {
-            showNotification(`正在测试凭证 #${index + 1}...`, 'info');
-            
-            // 找到要测试的凭证的原始数据
-            const originalCred = credentialsCache[index];
-            if (!originalCred) return;
+            const cred = credentialsCache[index];
+            if (!cred) return;
+
+            const credId = cred.credential_id || cred.filename;
+            if (!credId) {
+                showNotification('No credential_id available for this key', 'error');
+                return;
+            }
+
+            showNotification(`Testing ${credId}...`, 'info');
 
             try {
-                const response = await fetch('/codebuddy/v1/chat/completions', {
+                const response = await fetch('/codebuddy/v1/credentials/test', {
                     method: 'POST',
                     headers: getAuthHeaders(),
-                    body: JSON.stringify({
-                        // 在后端，token管理器是轮换的，我们无法直接指定用哪个token
-                        // 所以这里的测试实际上是测试下一个将被轮换到的token
-                        // 为了更精确，理想的后端应该有一个专门的测试接口
-                        // 但在当前架构下，这是最好的模拟
-                        model: 'claude-4.0',
-                        messages: [{ role: 'user', content: 'test' }],
-                        max_tokens: 1
-                    })
+                    body: JSON.stringify({ credential_id: credId })
                 });
-                
-                if (response.ok) {
-                    showNotification(`凭证 #${index + 1} 测试成功！ ✓`, 'success');
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(`✅ Key healthy (${data.latency_ms}ms)`, 'success');
                     credentialsCache[index].status = 'valid';
                 } else {
-                     showNotification(`凭证 #${index + 1} 无效或已过期 ✗`, 'error');
+                    showNotification(`❌ Key failed: ${data.message}`, 'error');
                     credentialsCache[index].status = 'invalid';
                 }
             } catch (error) {
-                showNotification(`网络错误: ${error.message}`, 'error');
+                showNotification(`Network error: ${error.message}`, 'error');
                 credentialsCache[index].status = 'invalid';
             } finally {
-                // 重新渲染列表以更新图标
                 displayCredentials();
             }
         }
 
-        // API测试功能
+        // API test functions
         async function testAPI() {
             const model = document.getElementById('testModel').value;
             const message = document.getElementById('testMessage').value;
@@ -2563,11 +2803,11 @@
             const resultDiv = document.getElementById('testResult');
 
             if (!message.trim()) {
-                showNotification('请输入测试消息', 'error');
+            showNotification('Please enter a test message', 'error');
                 return;
             }
 
-            resultDiv.innerHTML = '正在发送请求...\n';
+            resultDiv.innerHTML = 'Sending request...\n';
 
             try {
                 const response = await fetch('/codebuddy/v1/chat/completions', {
@@ -2596,14 +2836,14 @@
                             if (line.startsWith('data: ')) {
                                 const data = line.slice(6);
                                 if (data.trim() === '[DONE]') {
-                                    resultDiv.innerHTML += '\n\n[流结束]';
+                                    resultDiv.innerHTML += '\n\n[Stream finished]';
                                     continue;
                                 }
                                 try {
                                     const parsed = JSON.parse(data);
                                     resultDiv.innerHTML += JSON.stringify(parsed, null, 2) + '\n\n';
                                 } catch (e) {
-                                    // 忽略解析错误
+                                    // Ignore parse errors
                                 }
                             }
                         }
@@ -2615,22 +2855,22 @@
                 }
 
                 if (!response.ok) {
-                    showNotification('API 调用失败', 'error');
+                    showNotification('API call failed', 'error');
                 } else {
-                    showNotification('API 测试成功！', 'success');
+                    showNotification('API test succeeded!', 'success');
                 }
             } catch (error) {
-                resultDiv.innerHTML = `错误: ${error.message}`;
-                showNotification(`测试失败: ${error.message}`, 'error');
+                resultDiv.innerHTML = `Error: ${error.message}`;
+                showNotification(`Test failed: ${error.message}`, 'error');
             }
         }
 
-        // OAuth2认证相关功能
+        // OAuth2 authentication functions
         async function startAuth() {
             const btn = document.getElementById('getAuthBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在获取认证链接...';
-            // 确保清理旧的轮询和状态，并显示链接区域
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching auth link...';
+            // Ensure old polling/state is cleared and show link section
             try { stopPolling(); } catch (e) {}
             currentAuthData = null;
             const authUrlSection = document.getElementById('authUrlSection');
@@ -2645,30 +2885,30 @@
                 const response = await fetch('/codebuddy/auth/start', { method: 'GET' });
                 const data = await response.json();
                 
-                // 修正：检查正确的响应字段 `verification_uri_complete`
+                // Check correct response field `verification_uri_complete`
                 if (response.ok && data.verification_uri_complete) {
-                    // 保存所有必要信息以供轮询使用
+                    // Save all necessary info for polling
                     currentAuthData = {
                         auth_state: data.auth_state
                     };
 
-                    // 修正：使用正确的字段来设置输入框的值，并显示该区域
+                    // Use correct field to set input value and show section
                     document.getElementById('authUrlInput').value = data.verification_uri_complete;
                     const section = document.getElementById('authUrlSection');
                     section.classList.remove('hidden');
                     section.style.display = 'block';
                     
-                    showNotification('✅ 认证链接已生成，请点击链接完成登录', 'success');
+                    showNotification('✅ Auth link generated, please click to sign in', 'success');
                     
-                    // 立即开始轮询
+                    // Start polling immediately
                     pollForToken();
                 } else {
-                    let errorMessage = data.message || '获取认证链接失败';
+                    let errorMessage = data.message || 'Failed to get auth link';
                     showNotification(`❌ ${errorMessage}`, 'error');
                     resetAuthButton();
                 }
             } catch (error) {
-                showNotification(`❌ 网络错误: ${error.message}`, 'error');
+                showNotification(`❌ Network error: ${error.message}`, 'error');
                 resetAuthButton();
             }
         }
@@ -2676,20 +2916,20 @@
         function resetAuthButton() {
             const btn = document.getElementById('getAuthBtn');
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-play"></i> 开始认证';
+            btn.innerHTML = '<i class="fas fa-play"></i> Start Auth';
         }
 
         function copyAuthUrl() {
             const input = document.getElementById('authUrlInput');
             input.select();
             document.execCommand('copy');
-            showNotification('认证链接已复制到剪贴板', 'success');
+            showNotification('Auth link copied to clipboard', 'success');
         }
 
         function openAuthUrl() {
             const url = document.getElementById('authUrlInput').value;
             window.open(url, '_blank');
-            showNotification('已在新窗口打开认证页面，请完成登录', 'info');
+            showNotification('Auth page opened in new window, please complete login', 'info');
         }
 
         function showManualCallback() {
@@ -2709,34 +2949,33 @@
         async function submitCallbackUrl() {
             const callbackUrl = document.getElementById('callbackUrl').value.trim();
             if (!callbackUrl) {
-                showNotification('请输入回调链接', 'error');
+                showNotification('Please enter callback URL', 'error');
                 return;
             }
 
-            // 尝试从URL中提取授权码
+            // Try to extract authorization code from URL
             try {
                 const url = new URL(callbackUrl);
                 const code = url.searchParams.get('code');
                 const state = url.searchParams.get('state');
                 
                 if (code) {
-                    showNotification('正在处理授权码...', 'info');
-                    // 这里需要调用后端API来处理授权码
-                    // 暂时显示成功消息
-                    showNotification('授权码已提交，正在获取token...', 'success');
+                    showNotification('Processing authorization code...', 'info');
+                    // Backend should handle the auth code; temporarily show success
+                    showNotification('Authorization code submitted, fetching token...', 'success');
                     document.getElementById('callbackUrl').value = '';
                 } else {
-                    showNotification('URL中未找到授权码，请确认链接正确', 'error');
+                    showNotification('Authorization code not found in URL, please check the link', 'error');
                 }
             } catch (error) {
-                showNotification('无效的URL格式', 'error');
+                showNotification('Invalid URL format', 'error');
             }
         }
 
         function pollForToken() {
             if (!currentAuthData) return;
             
-            stopPolling(); // 清除之前的轮询
+            stopPolling(); // Clear previous polling
             
             const poll = async () => {
                 try {
@@ -2746,58 +2985,58 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            auth_state: currentAuthData.auth_state // 修正：发送auth_state
+                            auth_state: currentAuthData.auth_state // send auth_state
                         })
                     });
 
-                    const data = await response.json();
+            const data = await response.json();
 
-                    if (response.ok && data.access_token) {
-                        // 认证成功
-                        stopPolling();
-                        showNotification('🎉 认证成功！Token已自动保存', 'success');
-                        
-                        // 隐藏认证区域
-                        document.getElementById('authUrlSection').style.display = 'none';
-                        resetAuthButton();
-                        
-                        // 刷新凭证列表
-                        loadCredentials();
-                        
-                        // 清理认证数据
-                        currentAuthData = null;
-                        
-                    } else if (data.error === 'authorization_pending') {
-                        // 继续等待用户授权
-                        console.log('等待用户授权...');
-                    } else if (data.error === 'slow_down') {
-                        // 减慢轮询频率
-                        console.log('减慢轮询频率');
-                    } else if (data.error === 'expired_token') {
-                        // Token过期，停止轮询
-                        stopPolling();
-                        showNotification('认证链接已过期，请重新开始认证', 'warning');
-                        resetAuthButton();
-                        document.getElementById('authUrlSection').style.display = 'none';
-                    } else if (data.error === 'access_denied') {
-                        // 用户拒绝授权
-                        stopPolling();
-                        showNotification('用户拒绝了授权请求', 'warning');
-                        resetAuthButton();
-                        document.getElementById('authUrlSection').style.display = 'none';
-                    } else {
-                        // 其他错误
-                        console.error('轮询错误:', data);
-                    }
-                } catch (error) {
-                    console.error('轮询网络错误:', error);
-                }
+            if (response.ok && data.access_token) {
+                // Auth succeeded
+                stopPolling();
+                showNotification('🎉 Authentication succeeded! Token saved automatically', 'success');
+                
+                // Hide auth area
+                document.getElementById('authUrlSection').style.display = 'none';
+                resetAuthButton();
+                
+                // Refresh credential list
+                loadCredentials();
+                
+                // Clear auth data
+                currentAuthData = null;
+                
+            } else if (data.error === 'authorization_pending') {
+                // Waiting for user authorization
+                console.log('Waiting for user authorization...');
+            } else if (data.error === 'slow_down') {
+                // Slow down polling
+                console.log('Slowing down polling');
+            } else if (data.error === 'expired_token') {
+                // Token expired, stop polling
+                stopPolling();
+                showNotification('Auth link expired, please start again', 'warning');
+                resetAuthButton();
+                document.getElementById('authUrlSection').style.display = 'none';
+            } else if (data.error === 'access_denied') {
+                // User denied authorization
+                stopPolling();
+                showNotification('User denied the authorization request', 'warning');
+                resetAuthButton();
+                document.getElementById('authUrlSection').style.display = 'none';
+            } else {
+                // Other errors
+                console.error('Polling error:', data);
+            }
+        } catch (error) {
+            console.error('Polling network error:', error);
+        }
             };
 
-            // 立即执行一次
+            // Run immediately once
             poll();
             
-            // 设置轮询间隔（每5秒一次）
+            // Set polling interval (every 5s)
             authPollingInterval = setInterval(poll, 5000);
         }
 
@@ -2809,7 +3048,7 @@
         }
 
         function showManualInstructions(instructions) {
-            // 创建一个模态框显示手动获取指导
+            // Create a modal to show manual guidance
             const modal = document.createElement('div');
             modal.style.cssText = `
                 position: fixed;
@@ -2841,16 +3080,16 @@
             }
 
             content.innerHTML = `
-                <h3 style="margin-bottom: 1rem; color: var(--primary-color);">手动获取 Bearer Token</h3>
+                <h3 style="margin-bottom: 1rem; color: var(--primary-color);">Manually obtain Bearer Token</h3>
                 <ol style="line-height: 1.8; margin-bottom: 1.5rem;">
                     ${instructions.steps.map(step => `<li>${step}</li>`).join('')}
                 </ol>
                 <div style="text-align: right;">
-                    <button class="btn btn-secondary" onclick="this.closest('div').parentElement.remove()">
-                        <i class="fas fa-times"></i> 关闭
+                     <button class="btn btn-secondary" onclick="this.closest('div').parentElement.remove()">
+                        <i class="fas fa-times"></i> Close
                     </button>
                     <a href="${instructions.alternative_url}" target="_blank" class="btn btn-primary" style="margin-left: 0.5rem;">
-                        <i class="fas fa-external-link-alt"></i> 打开 CodeBuddy
+                        <i class="fas fa-external-link-alt"></i> Open CodeBuddy
                     </a>
                 </div>
             `;
@@ -2858,7 +3097,7 @@
             modal.appendChild(content);
             document.body.appendChild(modal);
 
-            // 点击背景关闭
+            // Click background to close
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.remove();
@@ -2867,34 +3106,34 @@
         }
 
         function showManualGuidedInstructions() {
-            // 显示手动引导说明，并提供选择
+            // Show manual guidance options
             const autoSection = document.getElementById('autoCallbackSection');
             autoSection.innerHTML = `
                 <div class="auth-progress">
                     <i class="fas fa-info-circle"></i>
-                    <div>手动认证流程</div>
-                    <small style="color: var(--secondary-color);">请按照步骤获取Bearer Token</small>
+                    <div>Manual authentication flow</div>
+                    <small style="color: var(--secondary-color);">Please follow the steps to get Bearer Token</small>
                 </div>
                 <div style="text-align: center; margin-top: 1rem;">
                     <button class="btn btn-success" onclick="openAuthUrl()" style="margin-right: 0.5rem;">
-                        <i class="fas fa-external-link-alt"></i> 打开CodeBuddy
+                        <i class="fas fa-external-link-alt"></i> Open CodeBuddy
                     </button>
                     <button class="btn btn-secondary" onclick="skipToManualAdd()">
-                        <i class="fas fa-edit"></i> 直接手动添加Token
+                        <i class="fas fa-edit"></i> Manually add token instead
                     </button>
                 </div>
             `;
         }
 
         function showManualSteps(steps) {
-            // 在通知中显示详细步骤，或者在页面上显示
-            let stepsHtml = '<div style="margin-top: 1rem;"><h4>详细操作步骤：</h4><ol>';
+            // Show detailed steps in a modal
+            let stepsHtml = '<div style="margin-top: 1rem;"><h4>Detailed steps:</h4><ol>';
             steps.forEach(step => {
                 stepsHtml += `<li>${step}</li>`;
             });
             stepsHtml += '</ol></div>';
             
-            // 可以选择在页面上显示步骤，或者在模态框中显示
+            // Steps can be shown on the page or in a modal
             const modal = document.createElement('div');
             modal.style.cssText = `
                 position: fixed;
@@ -2926,14 +3165,14 @@
             }
 
             content.innerHTML = `
-                <h3 style="margin-bottom: 1rem; color: var(--primary-color);">CodeBuddy 手动认证步骤</h3>
+                <h3 style="margin-bottom: 1rem; color: var(--primary-color);">CodeBuddy Manual Authentication Steps</h3>
                 ${stepsHtml}
                 <div style="text-align: right; margin-top: 2rem;">
                     <button class="btn btn-secondary" onclick="this.closest('div').parentElement.remove()">
-                        <i class="fas fa-times"></i> 我知道了
+                        <i class="fas fa-times"></i> Got it
                     </button>
                     <button class="btn btn-primary" onclick="openAuthUrl(); this.closest('div').parentElement.remove();" style="margin-left: 0.5rem;">
-                        <i class="fas fa-external-link-alt"></i> 打开CodeBuddy
+                        <i class="fas fa-external-link-alt"></i> Open CodeBuddy
                     </button>
                 </div>
             `;
@@ -2941,7 +3180,7 @@
             modal.appendChild(content);
             document.body.appendChild(modal);
 
-            // 点击背景关闭
+            // Click background to close
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.remove();
@@ -2950,24 +3189,24 @@
         }
 
         function skipToManualAdd() {
-            // 跳转到手动添加Token的区域
+            // Jump to manual token add area
             document.getElementById('authUrlSection').style.display = 'none';
             resetAuthButton();
             
-            // 聚焦到手动添加区域
+            // Focus on manual add area
             document.querySelector('#bearerToken').focus();
-            showNotification('请在下方手动添加您从CodeBuddy获取的Bearer Token', 'info');
+            showNotification('Please manually add the Bearer Token you obtained from CodeBuddy below', 'info');
         }
 
-        // 清理函数：页面卸载时停止轮询
+        // Cleanup: stop polling on page unload
         window.addEventListener('beforeunload', () => {
             stopPolling();
         });
 
-        // 设置页面功能
+        // Settings page functions
         async function loadSettings() {
             const settingsForm = document.getElementById('settingsForm');
-            settingsForm.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><div>加载配置中...</div></div>';
+            settingsForm.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i><div>Loading settings...</div></div>';
 
             try {
                 const response = await fetch('/api/settings', { headers: getAuthHeaders() });
@@ -2978,10 +3217,10 @@
                 const settings = data.settings;
                 const labels = data.labels;
                 
-                // 清空加载提示
+                // Clear loading placeholder
                 settingsForm.innerHTML = '';
 
-                // 根据从后端获取的设置动态创建表单
+                // Build form dynamically from backend settings
                 for (const key in settings) {
                     if (settings.hasOwnProperty(key)) {
                         const formGroup = document.createElement('div');
@@ -2990,7 +3229,7 @@
                         const label = document.createElement('label');
                         label.className = 'form-label';
                         label.htmlFor = `setting_${key}`;
-                        // 使用中文标签，如果不存在则回退到原始key
+                        // Use label from backend; fallback to key
                         label.textContent = labels[key] || key;
                         
                         const input = document.createElement('input');
@@ -3006,7 +3245,7 @@
                 }
 
             } catch (error) {
-                settingsForm.innerHTML = `<div class="status status-error">加载配置失败: ${error.message}</div>`;
+                settingsForm.innerHTML = `<div class="status status-error">Failed to load settings: ${error.message}</div>`;
             }
         }
 
@@ -3020,7 +3259,7 @@
                 newSettings[key] = input.value;
             });
 
-            showNotification('正在保存设置...', 'info');
+            showNotification('Saving settings...', 'info');
 
             try {
                 const response = await fetch('/api/settings', {
@@ -3032,12 +3271,50 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    showNotification(result.message || '设置已保存并热加载！', 'success');
+                    showNotification(result.message || 'Settings saved and hot reloaded!', 'success');
                 } else {
-                    throw new Error(result.detail || '保存失败');
+                    throw new Error(result.detail || 'Save failed');
                 }
             } catch (error) {
-                showNotification(`保存失败: ${error.message}`, 'error');
+                showNotification(`Save failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadHourlyHistory() {
+            const hours = parseInt(document.getElementById('historyHours').value) || 24;
+            const tbody = document.getElementById('hourlyHistoryTableBody');
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+
+            try {
+                const response = await fetch(`/codebuddy/v1/stats/history?hours=${hours}`, { headers: getAuthHeaders() });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                const buckets = data.buckets || {};
+                const keys = Object.keys(buckets).sort();
+
+                if (keys.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No data for this period</td></tr>';
+                } else {
+                    tbody.innerHTML = keys.map(k => {
+                        const b = buckets[k];
+                        const failClass = b.failures > 0 ? ' style="color: var(--error-color); font-weight: 600;"' : '';
+                        return `<tr><td>${k}</td><td style="text-align: right;">${b.requests}</td><td style="text-align: right;"${failClass}>${b.failures}</td></tr>`;
+                    }).join('');
+                }
+
+                const ranking = data.failure_ranking || [];
+                const rankSection = document.getElementById('failureRankingSection');
+                const rankBody = document.getElementById('failureRankingTableBody');
+                if (ranking.length > 0) {
+                    rankSection.style.display = 'block';
+                    rankBody.innerHTML = ranking.map(r =>
+                        `<tr><td>${r.credential_id}</td><td style="text-align: right; color: var(--error-color); font-weight: 600;">${r.failures}</td></tr>`
+                    ).join('');
+                } else {
+                    rankSection.style.display = 'none';
+                }
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--error-color);">Failed: ${error.message}</td></tr>`;
             }
         }
 
@@ -3058,7 +3335,7 @@
                    modelTableBody.innerHTML += row;
                });
            } else {
-               modelTableBody.innerHTML = '<tr><td colspan="2" style="text-align: center;">暂无模型使用数据</td></tr>';
+               modelTableBody.innerHTML = '<tr><td colspan="2" style="text-align: center;">No model usage data yet</td></tr>';
            }
 
            // Populate Credential Usage Table
@@ -3070,7 +3347,7 @@
                    credentialTableBody.innerHTML += row;
                });
            } else {
-               credentialTableBody.innerHTML = '<tr><td colspan="2" style="text-align: center;">暂无凭证使用数据</td></tr>';
+                credentialTableBody.innerHTML = '<tr><td colspan="2" style="text-align: center;">No credential usage data yet</td></tr>';
            }
        }
     </script>
