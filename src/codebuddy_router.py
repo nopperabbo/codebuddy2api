@@ -45,8 +45,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 MODEL_MAX_OUTPUT = {
-    "claude-opus-4.6": 32000,
-    "claude-haiku-4.5": 16000,
+    "claude-opus-4.6": 128000,
+    "claude-haiku-4.5": 64000,
     "gpt-5.5": 128000,
     "gpt-5": 128000,
     "gpt-5-mini": 64000,
@@ -56,7 +56,7 @@ MODEL_MAX_OUTPUT = {
     "gemini-2.5-flash": 65536,
     "gemini-3.1-pro": 65536,
 }
-DEFAULT_MAX_OUTPUT = 64000
+DEFAULT_MAX_OUTPUT = 128000
 
 # Config accessors — always read fresh values so hot-reload works
 

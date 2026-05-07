@@ -10,8 +10,6 @@ import logging
 import time
 from typing import Dict, Any, Optional
 
-import httpx
-
 logger = logging.getLogger(__name__)
 
 # How often to run health checks (seconds)
@@ -93,103 +91,66 @@ def get_credential_score(credential_id: str) -> float:
     return max(0.01, min(1.0, score))
 
 
-async def _ping_codebuddy_endpoint(api_url: str, bearer_token: str) -> Optional[float]:
+async def _do_health_checks():
     """
-    Send a minimal chat completion to codebuddy and measure latency.
-    Returns latency_ms or None on failure.
+    Passive health check — derives provider status from real request
+    tracking (mark_credential_success/failure) rather than sending
+    synthetic pings that waste quota and cause 400 errors.
     """
-    start = time.monotonic()
-    try:
-        async with httpx.AsyncClient(verify=False, timeout=HEALTH_CHECK_TIMEOUT) as client:
-            resp = await client.post(
-                api_url,
-                headers={
-                    "Authorization": f"Bearer {bearer_token}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": HEALTH_CHECK_MODEL,
-                    "messages": [{"role": "user", "content": "hi"}],
-                    "max_tokens": 5,
-                    "stream": False,
-                }
-            )
-            elapsed_ms = (time.monotonic() - start) * 1000
-            if resp.status_code == 200:
-                return elapsed_ms
-            else:
-                logger.debug(f"Health ping got {resp.status_code}: {resp.text[:100]}")
-                return None
-    except Exception as e:
-        logger.debug(f"Health ping error: {e}")
-        return None
+    h = _credential_health
+    if not h:
+        _provider_health["codebuddy"] = {
+            "status": "unknown",
+            "last_check": time.time(),
+            "latency_ms": None,
+            "consecutive_failures": 0,
+            "note": "No traffic yet",
+        }
+        return
+
+    total_s = sum(v.get("successes", 0) for v in h.values())
+    total_f = sum(v.get("failures",  0) for v in h.values())
+    total   = total_s + total_f
+    success_rate = total_s / total if total > 0 else 1.0
+
+    # Average latency across credentials that have data
+    latencies = [
+        v["total_latency_ms"] / v["successes"]
+        for v in h.values()
+        if v.get("successes", 0) > 0
+    ]
+    avg_latency = round(sum(latencies) / len(latencies), 1) if latencies else None
+
+    if success_rate >= 0.9:
+        status = "healthy"
+    elif success_rate >= 0.5:
+        status = "degraded"
+    else:
+        status = "down"
+
+    _provider_health["codebuddy"] = {
+        "status"       : status,
+        "last_check"   : time.time(),
+        "latency_ms"   : avg_latency,
+        "success_rate" : round(success_rate * 100, 1),
+        "total_requests": total,
+        "note": "Derived from real traffic (no synthetic pings)",
+    }
+    logger.info(f"Health snapshot: codebuddy {status} "
+                f"success_rate={success_rate*100:.0f}% "
+                f"avg_latency={avg_latency}ms total={total}")
 
 
 async def _run_health_checks():
-    """Main health check loop."""
+    """Periodic health snapshot loop — passive, no synthetic pings."""
     global _running
     logger.info("Health monitor started")
-
     while _running:
         try:
             await _do_health_checks()
         except Exception as e:
             logger.error(f"Health check loop error: {e}")
         await asyncio.sleep(HEALTH_CHECK_INTERVAL)
-
-
-async def _do_health_checks():
-    """Run one round of health checks across all providers."""
-    from config import get_codebuddy_api_endpoint
-    from src.codebuddy_token_manager import codebuddy_token_manager
-
-    api_url = f"{get_codebuddy_api_endpoint()}/v2/chat/completions"
-    creds = codebuddy_token_manager.get_all_credentials()
-
-    if not creds:
-        logger.debug("Health monitor: no credentials to check")
-        return
-
-    # Sample a few credentials to check — not all 500+ of them
-    import random
-    sample = random.sample(creds, min(3, len(creds)))
-
-    results = []
-    for cred in sample:
-        bearer = cred.get("bearer_token")
-        if not bearer:
-            continue
-        latency = await _ping_codebuddy_endpoint(api_url, bearer)
-        results.append(latency)
-
-    # Update provider health
-    successful = [l for l in results if l is not None]
-    failed = len(results) - len(successful)
-
-    prev = _provider_health.get("codebuddy", {"consecutive_failures": 0, "successes": 0, "failures": 0})
-    if successful:
-        avg_latency = sum(successful) / len(successful)
-        prev_fails = prev.get("consecutive_failures", 0)
-        _provider_health["codebuddy"] = {
-            "status": "healthy",
-            "last_check": time.time(),
-            "latency_ms": round(avg_latency, 1),
-            "consecutive_failures": 0,
-            "successes": prev.get("successes", 0) + len(successful),
-            "failures": prev.get("failures", 0) + failed,
-        }
-        logger.info(f"Health check: codebuddy OK — avg {avg_latency:.0f}ms ({len(successful)}/{len(results)} passed)")
-    else:
-        consec = prev.get("consecutive_failures", 0) + 1
-        _provider_health["codebuddy"] = {
-            "status": "degraded" if consec < 3 else "down",
-            "last_check": time.time(),
-            "latency_ms": None,
-            "consecutive_failures": consec,
-            "successes": prev.get("successes", 0),
-            "failures": prev.get("failures", 0) + len(results),
-        }
-        logger.warning(f"Health check: codebuddy FAILED ({consec} consecutive failures)")
 
 
 async def startup():
