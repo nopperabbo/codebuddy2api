@@ -175,7 +175,10 @@ logs/
 *.backup
 .claude/settings.local.json
 
-# OpenCode config (node_modules only - config files are tracked)
+# HAR/debug files
+*.har
+
+# OpenCode config (node_modules only)
 opencode-config/node_modules/
 opencode-config/cli/node_modules/
 opencode-config/bun.lock
