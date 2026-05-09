@@ -183,3 +183,11 @@ opencode-config/node_modules/
 opencode-config/cli/node_modules/
 opencode-config/bun.lock
 opencode-config/*.tmp
+
+# Kiro specific
+kiro_keys.json
+harvested_credentials.txt
+has_credit.txt
+no_credit.txt
+error_credit.txt
+KIRO_AUTH_FIX.md

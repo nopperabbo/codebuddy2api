@@ -913,16 +913,18 @@ class RequestProcessor:
             except (TypeError, ValueError):
                 del payload["top_p"]
 
+        model_name = payload.get("model", "")
+        model_max = MODEL_MAX_OUTPUT.get(model_name, DEFAULT_MAX_OUTPUT)
         if "max_tokens" in payload:
             try:
                 val = int(payload["max_tokens"])
-                payload["max_tokens"] = max(1, min(val, 128000))
+                payload["max_tokens"] = max(model_max, min(val, 128000))
             except (TypeError, ValueError):
-                del payload["max_tokens"]
+                payload["max_tokens"] = model_max
         else:
-            # Inject default max_tokens based on model to prevent upstream from using low defaults
-            model_name = payload.get("model", "")
-            payload["max_tokens"] = MODEL_MAX_OUTPUT.get(model_name, DEFAULT_MAX_OUTPUT)
+            payload["max_tokens"] = model_max
+
+        logger.info(f"[FINAL] model={model_name}, max_tokens={payload.get('max_tokens')}")
 
         for unsupported in ("logit_bias", "logprobs", "top_logprobs", "n", "seed", "user", "service_tier"):
             payload.pop(unsupported, None)
@@ -1226,6 +1228,8 @@ async def chat_completions(
             raise HTTPException(status_code=400, detail=f"Invalid JSON request body: {str(e)}")
 
         RequestProcessor.validate_request(request_body)
+
+        logger.info(f"[REQ] model={request_body.get('model')}, max_tokens={request_body.get('max_tokens', 'NOT_SET')}, stream={request_body.get('stream')}")
 
         client_wants_stream = request_body.get("stream", False)
         model = request_body.get("model", "unknown")

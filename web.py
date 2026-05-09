@@ -14,10 +14,12 @@ from src.codebuddy_auth_router import router as codebuddy_auth_router
 from src.settings_router import router as settings_router
 from src.frontend_router import router as frontend_router
 from src.health_router import health_router
+from src.kiro_router import router as kiro_router
 from src.circuit_breaker import CircuitBreakerManager
 from src.health_db import HealthDatabase
 from src.alerting import AlertManager
-from src.credit_checker import credit_checker
+# credit_checker disabled: quota_estimator tracks usage from real traffic
+# from src.credit_checker import credit_checker
 
 from config import get_server_host, get_server_port, get_log_level
 
@@ -45,16 +47,18 @@ async def lifespan(app: FastAPI):
     from src import health_monitor
     await health_monitor.startup()
 
-    from src.codebuddy_token_manager import codebuddy_token_manager
-    await credit_checker.start(codebuddy_token_manager)
+    from src.codebuddy_token_manager import codebuddy_token_manager  # noqa: F401 – loads creds
 
     try:
         await lifecycle_manager.startup()
         yield
     finally:
-        await credit_checker.stop()
         await alert_mgr.stop()
+        from src import health_monitor
+        await health_monitor.shutdown()
         await lifecycle_manager.shutdown()
+        from src.kiro_router import close_kiro_http_client
+        await close_kiro_http_client()
         logger.info("CodeBuddy2API Service stopped")
 
 
@@ -99,6 +103,12 @@ app.include_router(
 app.include_router(
     health_router,
     tags=["Health & Circuit Breaker"]
+)
+
+app.include_router(
+    kiro_router,
+    prefix="/kiro",
+    tags=["Kiro (Amazon Q Developer) API"]
 )
 
 
@@ -157,8 +167,8 @@ async def get_request_logs(n: int = 100):
 async def root():
     return {
         "service": "CodeBuddy2API",
-        "version": "2.0.0",
-        "description": "CodeBuddy API proxy with OpenAI-compatible interface",
+        "version": "2.1.0",
+        "description": "CodeBuddy + Kiro API proxy with OpenAI-compatible interface",
         "endpoints": {
             "models": "/codebuddy/v1/models",
             "chat": "/codebuddy/v1/chat/completions",
@@ -169,7 +179,10 @@ async def root():
             "auth_poll": "/codebuddy/auth/poll",
             "auth_callback": "/codebuddy/auth/callback",
             "get_settings": "/api/settings",
-            "save_settings": "/api/settings"
+            "save_settings": "/api/settings",
+            "kiro_models": "/kiro/v1/models",
+            "kiro_chat": "/kiro/v1/chat/completions",
+            "kiro_keys": "/kiro/v1/keys",
         }
     }
 
