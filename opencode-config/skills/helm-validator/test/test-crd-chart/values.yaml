@@ -1,8 +1,0 @@
-certManager:
-  enabled: true
-  certificate:
-    dnsNames:
-      - example.com
-
-prometheus:
-  enabled: true

@@ -1,9 +1,0 @@
-{
-  "dependencies": {
-    "@opencode-ai/plugin": "1.14.25",
-    "@ramtinj95/opencode-tokenscope": "latest",
-    "@tarquinen/opencode-dcp": "latest",
-    "cc-safety-net": "latest",
-    "opencode-ag-auth": "latest"
-  }
-}

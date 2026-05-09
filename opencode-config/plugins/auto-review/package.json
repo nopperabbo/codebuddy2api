@@ -1,7 +1,0 @@
-{
-  "name": "auto-review",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "index.mjs",
-  "description": "Auto-review quality gate — triggers review after task completion"
-}
