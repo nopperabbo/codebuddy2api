@@ -9,7 +9,7 @@ import time
 from collections import defaultdict
 from datetime import datetime, timezone
 
-_STATS_FILE = os.path.join(os.path.dirname(__file__), '..', 'stats.json')
+_STATS_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'stats.json')
 _PERSIST_INTERVAL = 100  # persist every N requests
 _HOURLY_RETENTION_HOURS = 72
 

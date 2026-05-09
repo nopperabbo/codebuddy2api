@@ -9,7 +9,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-SESSIONS_DIR = Path(".sessions")
+SESSIONS_DIR = Path(__file__).parent.parent / "data" / ".sessions"
 MAX_FACTS = 20
 SESSION_TTL_SECONDS = 24 * 60 * 60
 _CLEANUP_INTERVAL = 50

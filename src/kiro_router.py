@@ -80,7 +80,7 @@ def load_kiro_keys():
         _kiro_api_keys.append(single_key)
 
     # Load from kiro_keys.json if exists
-    keys_file = os.path.join(os.path.dirname(__file__), '..', 'kiro_keys.json')
+    keys_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'kiro_keys.json')
     if os.path.exists(keys_file):
         try:
             with open(keys_file, 'r') as f:
@@ -115,7 +115,7 @@ def add_kiro_key(api_key: str) -> bool:
 def _save_kiro_keys():
     """Persist Kiro keys to disk."""
     import os
-    keys_file = os.path.join(os.path.dirname(__file__), '..', 'kiro_keys.json')
+    keys_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'kiro_keys.json')
     try:
         data = [{"api_key": k, "added_at": int(time.time())} for k in _kiro_api_keys]
         with open(keys_file, 'w') as f:
@@ -351,7 +351,7 @@ async def kiro_chat_completions(
     # DEBUG: dump full request for inspection
     try:
         import os
-        debug_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "kiro_last_request.json")
+        debug_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "kiro_last_request.json")
         with open(debug_path, "w") as f:
             json.dump(request_body, f, indent=2, ensure_ascii=False)
         total_chars = sum(len(json.dumps(m.get("content", ""), ensure_ascii=False)) for m in messages)

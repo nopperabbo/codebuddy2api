@@ -37,8 +37,8 @@ rate_limit_event = asyncio.Event()
 rate_limit_event.set()  # starts unblocked
 
 CODEBUDDY_BASE = "https://www.codebuddy.ai"
-CREDS_DIR = Path(__file__).parent / ".codebuddy_creds"
-KEYS_FILE = Path(__file__).parent / "harvested_keys.json"
+CREDS_DIR = Path(__file__).parent.parent / "data" / ".codebuddy_creds"
+KEYS_FILE = Path(__file__).parent.parent / "data" / "harvested_keys.json"
 FAILED_FILE = Path(__file__).parent / "failed_accounts.txt"
 STATE_FILE = Path(__file__).parent / ".harvest_state.json"
 

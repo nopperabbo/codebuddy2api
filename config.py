@@ -24,7 +24,7 @@ _DEFAULT_CONFIG = {
     "CODEBUDDY_PORT": 8001,
     "CODEBUDDY_PASSWORD": None,
     "CODEBUDDY_API_ENDPOINT": "https://www.codebuddy.ai",
-    "CODEBUDDY_CREDS_DIR": ".codebuddy_creds",
+    "CODEBUDDY_CREDS_DIR": "data/.codebuddy_creds",
     "CODEBUDDY_LOG_LEVEL": "INFO",
     "CODEBUDDY_MODELS": "claude-4.0,claude-3.7,gpt-5,gpt-5-mini,gpt-5-nano,o4-mini,gemini-2.5-flash,gemini-2.5-pro,auto-chat",
     "CODEBUDDY_ROTATION_COUNT": 1,
