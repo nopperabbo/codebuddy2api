@@ -1,0 +1,7 @@
+{
+  "name": "wisdom-keeper",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.mjs",
+  "description": "Structured wisdom management — categorized, scoped, searchable JSONL knowledge store"
+}

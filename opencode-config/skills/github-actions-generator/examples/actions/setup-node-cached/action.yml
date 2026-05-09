@@ -1,0 +1,93 @@
+name: 'Setup Node.js with Smart Caching'
+description: 'Setup Node.js with intelligent dependency caching and installation'
+author: 'Example Author'
+
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: true
+  package-manager:
+    description: 'Package manager to use (npm, yarn, pnpm)'
+    required: false
+    default: 'npm'
+  cache-dependency-path:
+    description: 'Path to lock file(s)'
+    required: false
+    default: '**/package-lock.json'
+
+outputs:
+  cache-hit:
+    description: 'Whether cache was hit'
+    value: ${{ steps.cache.outputs.cache-hit }}
+  node-version:
+    description: 'Actual Node.js version installed'
+    value: ${{ steps.setup.outputs.node-version }}
+
+branding:
+  icon: 'package'
+  color: 'green'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        if [[ ! "${{ inputs.package-manager }}" =~ ^(npm|yarn|pnpm)$ ]]; then
+          echo "::error::Invalid package manager: ${{ inputs.package-manager }}"
+          exit 1
+        fi
+        echo "✅ Inputs validated"
+
+    - name: Setup Node.js ${{ inputs.node-version }}
+      id: setup
+      uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Enable Corepack for pnpm/yarn
+      if: inputs.package-manager != 'npm'
+      shell: bash
+      run: corepack enable
+
+    - name: Get cache directory
+      id: cache-dir
+      shell: bash
+      run: |
+        if [ "${{ inputs.package-manager }}" == "npm" ]; then
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+        elif [ "${{ inputs.package-manager }}" == "yarn" ]; then
+          echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+        else
+          echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Cache dependencies
+      id: cache
+      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+      with:
+        path: ${{ steps.cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-${{ inputs.package-manager }}-${{ hashFiles(inputs.cache-dependency-path) }}
+        restore-keys: |
+          ${{ runner.os }}-${{ inputs.package-manager }}-
+
+    - name: Install dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        if [ "${{ inputs.package-manager }}" == "npm" ]; then
+          npm ci
+        elif [ "${{ inputs.package-manager }}" == "yarn" ]; then
+          yarn install --frozen-lockfile
+        else
+          pnpm install --frozen-lockfile
+        fi
+
+    - name: Report status
+      shell: bash
+      run: |
+        echo "::group::Setup Summary"
+        echo "Node.js version: $(node --version)"
+        echo "Package manager: ${{ inputs.package-manager }}"
+        echo "Cache hit: ${{ steps.cache.outputs.cache-hit }}"
+        echo "::endgroup::"

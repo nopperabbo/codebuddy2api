@@ -1,0 +1,40 @@
+# WARNING: Optional high-privilege RBAC example.
+# Grants cluster-wide read access to nodes and namespaces.
+# Apply only when the workload must read cluster-scoped resources.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: my-app-cluster-read-optional
+  labels:
+    app.kubernetes.io/name: my-app
+    app.kubernetes.io/instance: my-app
+    app.kubernetes.io/part-of: my-app
+    app.kubernetes.io/managed-by: kubectl
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: my-app-cluster-read-optional
+  labels:
+    app.kubernetes.io/name: my-app
+    app.kubernetes.io/instance: my-app
+    app.kubernetes.io/part-of: my-app
+    app.kubernetes.io/managed-by: kubectl
+subjects:
+- kind: ServiceAccount
+  name: my-app
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: my-app-cluster-read-optional

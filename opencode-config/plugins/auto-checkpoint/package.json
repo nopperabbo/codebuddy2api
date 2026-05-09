@@ -1,0 +1,10 @@
+{
+  "name": "auto-checkpoint",
+  "version": "1.0.0",
+  "description": "Background git commits on idle — never lose work",
+  "type": "module",
+  "main": "index.mjs",
+  "exports": {
+    ".": "./index.mjs"
+  }
+}

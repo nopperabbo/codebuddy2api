@@ -88,7 +88,6 @@ temp_*
 _archive/
 
 # --- OpenCode Config (personal, not part of project) ---
-opencode-config/
 
 # --- Misc ---
 .opencode-context.md

@@ -1,0 +1,10 @@
+# Rendered templates output
+/rendered/
+rendered-*.yaml
+
+# Test artifacts
+/tmp/
+
+# Helm artifacts
+*.tgz
+charts/*.tgz

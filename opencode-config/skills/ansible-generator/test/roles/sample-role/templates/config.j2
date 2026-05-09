@@ -1,0 +1,13 @@
+service:
+  name: {{ sample_role_service_name }}
+  user: {{ sample_role_user }}
+  group: {{ sample_role_group }}
+
+paths:
+  config: {{ sample_role_config_dir }}
+  data: {{ sample_role_data_dir }}
+  log: {{ sample_role_log_dir }}
+
+network:
+  bind_address: {{ sample_role_bind_address }}
+  port: {{ sample_role_port }}

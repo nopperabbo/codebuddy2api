@@ -1,0 +1,16 @@
+{
+  "id": "budget",
+  "name": "Budget — Maximum Savings",
+  "description": "Cheapest possible model. Minimal token usage for cost-conscious users.",
+  "provider": "openai",
+  "model": "gpt-4o-mini",
+  "maxTokens": 2048,
+  "temperature": 0.4,
+  "apiKeyEnv": "OPENAI_API_KEY",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 5,
+    "aggressiveSummarization": true,
+    "skipSystemPromptRepetition": true
+  }
+}

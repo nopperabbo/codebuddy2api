@@ -1,0 +1,3 @@
+# Terragrunt/Terraform generated directories
+**/.terragrunt-cache/
+**/.terraform/

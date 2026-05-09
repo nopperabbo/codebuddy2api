@@ -1,0 +1,7 @@
+---
+all:
+  children:
+    local:
+      hosts:
+        localhost:
+          ansible_user: tester

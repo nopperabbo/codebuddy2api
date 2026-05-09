@@ -1,0 +1,89 @@
+# Basic Azure Pipeline Example
+# Simple CI pipeline with build and test stages
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+pool:
+  vmImage: 'ubuntu-22.04'
+
+variables:
+  buildConfiguration: 'Release'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+  NUGET_PACKAGES: '$(Pipeline.Workspace)/.nuget/packages'
+
+stages:
+  - stage: Build
+    displayName: 'Build Stage'
+    jobs:
+      - job: BuildJob
+        displayName: 'Build Application'
+        steps:
+          - task: UseDotNet@2
+            displayName: 'Install .NET SDK'
+            inputs:
+              version: '8.x'
+
+          - task: Cache@2
+            displayName: 'Cache NuGet packages'
+            inputs:
+              key: 'nuget | "$(Agent.OS)" | **/*.csproj'
+              restoreKeys: |
+                nuget | "$(Agent.OS)"
+              path: '$(NUGET_PACKAGES)'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Restore Dependencies'
+            inputs:
+              command: 'restore'
+              projects: '**/*.csproj'
+            env:
+              NUGET_PACKAGES: '$(NUGET_PACKAGES)'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Build Project'
+            inputs:
+              command: 'build'
+              projects: '**/*.csproj'
+              arguments: '--configuration $(buildConfiguration)'
+            env:
+              NUGET_PACKAGES: '$(NUGET_PACKAGES)'
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Build Artifacts'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)'
+              artifact: 'drop'
+
+  - stage: Test
+    displayName: 'Test Stage'
+    dependsOn: Build
+    jobs:
+      - job: VerificationJob
+        displayName: 'Run Tests'
+        steps:
+          - task: Cache@2
+            displayName: 'Restore NuGet cache'
+            inputs:
+              key: 'nuget | "$(Agent.OS)" | **/*.csproj'
+              restoreKeys: |
+                nuget | "$(Agent.OS)"
+              path: '$(NUGET_PACKAGES)'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Run Unit Tests'
+            inputs:
+              command: 'test'
+              projects: '**/*Tests.csproj'
+              arguments: '--configuration $(buildConfiguration) --collect:"XPlat Code Coverage"'
+            env:
+              NUGET_PACKAGES: '$(NUGET_PACKAGES)'
+
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publish Code Coverage'
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '$(Agent.TempDirectory)/**/*coverage.cobertura.xml'

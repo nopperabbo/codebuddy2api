@@ -1,0 +1,204 @@
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
+  "google_auth": false,
+  "disabled_hooks": ["anthropic-context-window-limit-recovery"],
+  "browser_automation_engine": {
+    "provider": "playwright"
+  },
+  "agents": {
+    "sisyphus": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Main coordinator - EnowX Opus 4.6"
+    },
+    "oracle": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Design and debugging - EnowX Opus 4.6"
+    },
+    "librarian": {
+      "model": "enowxlabs/gemini-3.1-pro",
+      "variant": "max",
+      "comment": "Research - EnowX Gemini 3.1 Pro"
+    },
+    "explore": {
+      "model": "enowxlabs/gpt-5.3-codex",
+      "variant": "max",
+      "comment": "Codebase exploration - EnowX GPT 5.3 Codex"
+    },
+    "multimodal-looker": {
+      "model": "enowxlabs/gemini-3.1-pro",
+      "variant": "max",
+      "comment": "Vision and interpretation - EnowX Gemini 3.1 Pro"
+    },
+    "prometheus": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Architecture - EnowX Opus 4.6"
+    },
+    "metis": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Strategy - EnowX Opus 4.6"
+    },
+    "momus": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Critique and quality gate - EnowX Opus 4.6"
+    },
+    "atlas": {
+      "model": "enowxlabs/gpt-5.4",
+      "variant": "max",
+      "comment": "Heavy lifting - EnowX GPT 5.4"
+    },
+    "executor": {
+      "model": "enowxlabs/gpt-5.1-codex-max",
+      "variant": "max",
+      "comment": "Fast implementation - EnowX GPT 5.1 Codex Max"
+    },
+    "reviewer": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Code review - EnowX Opus 4.6"
+    },
+    "tester": {
+      "model": "enowxlabs/gpt-5.1-codex-max",
+      "variant": "max",
+      "comment": "Test generation - EnowX GPT 5.1 Codex Max"
+    },
+    "security-auditor": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Security - EnowX Opus 4.6"
+    },
+    "refactorer": {
+      "model": "enowxlabs/gpt-5.4",
+      "variant": "max",
+      "comment": "Refactoring - EnowX GPT 5.4"
+    },
+    "doc-writer": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Documentation - EnowX Opus 4.6"
+    }
+  },
+  "lsp": {
+    "rust": {
+      "command": ["rust-analyzer"],
+      "extensions": [".rs"]
+    },
+    "markdown": {
+      "command": ["marksman", "server"],
+      "extensions": [".md"]
+    },
+    "go": {
+      "command": ["gopls"],
+      "extensions": [".go"]
+    },
+    "typescript": {
+      "command": ["typescript-language-server", "--stdio"],
+      "extensions": [".ts", ".tsx", ".js", ".jsx"]
+    },
+    "python": {
+      "command": ["pyright-langserver", "--stdio"],
+      "extensions": [".py"]
+    },
+    "bash": {
+      "command": ["bash-language-server", "start"],
+      "extensions": [".sh", ".bash", ".zsh"]
+    },
+    "yaml": {
+      "command": ["yaml-language-server", "--stdio"],
+      "extensions": [".yaml", ".yml"]
+    },
+    "json": {
+      "command": ["vscode-json-language-server", "--stdio"],
+      "extensions": [".json", ".jsonc"]
+    },
+    "toml": {
+      "command": ["taplo", "lsp", "stdio"],
+      "extensions": [".toml"]
+    },
+    "css": {
+      "command": ["vscode-css-language-server", "--stdio"],
+      "extensions": [".css", ".scss", ".less"]
+    },
+    "html": {
+      "command": ["vscode-html-language-server", "--stdio"],
+      "extensions": [".html", ".htm", ".vue", ".svelte"]
+    },
+    "sql": {
+      "command": ["sql-language-server", "up", "--method", "stdio"],
+      "extensions": [".sql"]
+    },
+    "eslint": {
+      "command": ["vscode-eslint-language-server", "--stdio"],
+      "extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]
+    }
+  },
+  "categories": {
+    "visual-engineering": {
+      "model": "enowxlabs/gemini-3.1-pro",
+      "variant": "max",
+      "comment": "UI/UX - EnowX Gemini 3.1 Pro"
+    },
+    "artistry": {
+      "model": "enowxlabs/gemini-3.1-pro",
+      "variant": "max",
+      "comment": "Creative work - EnowX Gemini 3.1 Pro"
+    },
+    "writing": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Writing - EnowX Opus 4.6"
+    },
+    "quick": {
+      "model": "enowxlabs/gpt-5.1-codex-max",
+      "variant": "max",
+      "comment": "Fast tasks - EnowX GPT 5.1 Codex Max"
+    },
+    "ultrabrain": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Heavy reasoning - EnowX Opus 4.6"
+    },
+    "implementation": {
+      "model": "enowxlabs/gpt-5.3-codex",
+      "variant": "max",
+      "comment": "Implementation - EnowX GPT 5.3 Codex"
+    },
+    "review": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Review - EnowX Opus 4.6"
+    },
+    "testing": {
+      "model": "enowxlabs/gpt-5.1-codex-max",
+      "variant": "max",
+      "comment": "Testing - EnowX GPT 5.1 Codex Max"
+    },
+    "security": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Security - EnowX Opus 4.6"
+    },
+    "unspecified-low": {
+      "model": "enowxlabs/gpt-5.1-codex-max",
+      "variant": "max",
+      "comment": "General low - EnowX GPT 5.1 Codex Max"
+    },
+    "unspecified-high": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "General high - EnowX Opus 4.6"
+    },
+    "deep": {
+      "model": "enowxlabs/claude-opus-4.6",
+      "variant": "max",
+      "comment": "Deep reasoning - EnowX Opus 4.6"
+    }
+  },
+  "background_task": {
+    "defaultConcurrency": 8
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "quality",
+  "name": "Quality — Best Output",
+  "description": "Best available model for final output and critical decisions.",
+  "provider": "anthropic",
+  "model": "claude-opus-4-20250514",
+  "maxTokens": 8192,
+  "temperature": 0.1,
+  "apiKeyEnv": "ANTHROPIC_API_KEY",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 12
+  }
+}

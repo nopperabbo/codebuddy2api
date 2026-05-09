@@ -1,0 +1,292 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "enowxlabs/claude-opus-4.6",
+  "plugin": [
+    "oh-my-openagent@latest",
+    "@tarquinen/opencode-dcp@latest",
+    "cc-safety-net@latest",
+    "@ramtinj95/opencode-tokenscope@latest",
+    "opencode-worktree@latest",
+    "superpowers@git+https://github.com/obra/superpowers.git",
+    "opencode-agent-skills",
+    "file://$HOME/.config/opencode/plugins/auto-checkpoint/",
+    "file://$HOME/.config/opencode/plugins/wisdom-keeper/",
+    "file://$HOME/.config/opencode/plugins/auto-review/",
+    "file://$HOME/.config/opencode/plugins/git-safety/",
+    "file://$HOME/.config/opencode/plugins/cross-model-verify/",
+    "file://$HOME/.config/opencode/plugins/rtk/"
+  ],
+  "mcp": {
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "grep_app": {
+      "type": "remote",
+      "url": "https://mcp.grep.app"
+    },
+    "github": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "enabled": true
+    },
+    "time": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "time-mcp"
+      ]
+    },
+    "exa": {
+      "type": "remote",
+      "url": "https://mcp.exa.ai/mcp",
+      "headers": {
+        "x-api-key": "{env:EXA_API_KEY}"
+      },
+      "enabled": false
+    },
+    "playwright": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@playwright/mcp@latest",
+        "--headless"
+      ]
+    },
+    "memory": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "fetch": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "mcp-server-fetch-typescript"
+      ],
+      "enabled": true
+    },
+    "filesystem": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "$HOME/Desktop",
+        "$HOME/Projects",
+        "/tmp"
+      ]
+    },
+    "context-keeper": {
+      "type": "local",
+      "command": [
+        "bun",
+        "run",
+        "$HOME/.config/opencode/cli/src/mcp/context-keeper.ts"
+      ],
+      "env": {
+        "PROJECT_ROOT": "${PROJECT_ROOT}"
+      },
+      "enabled": true
+    },
+    "github-search": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "enabled": true
+    },
+    "postgres": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://localhost:5432/postgres"
+      ],
+      "enabled": false
+    },
+    "contextplus": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "contextplus"
+      ],
+      "env": {
+        "CONTEXTPLUS_EMBED_PROVIDER": "openai",
+        "CONTEXTPLUS_OPENAI_API_KEY": "${GEMINI_API_KEY}",
+        "CONTEXTPLUS_OPENAI_BASE_URL": "https://generativelanguage.googleapis.com/v1beta/openai",
+        "CONTEXTPLUS_OPENAI_EMBED_MODEL": "text-embedding-004"
+      },
+      "enabled": true
+    }
+  },
+  "provider": {
+    "enowxlabs": {
+      "models": {
+        "auto": {
+          "limit": { "context": 1000000, "output": 64000 },
+          "name": "auto (enowX Labs)",
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "medium": { "thinkingConfig": { "thinkingBudget": 16384 } },
+            "high": { "thinkingConfig": { "thinkingBudget": 24576 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
+          }
+        },
+        "claude-opus-4.6": {
+          "limit": { "context": 1000000, "output": 64000 },
+          "name": "Opus 4.6 CodeBuddy (enowX Labs)",
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingConfig": { "thinkingBudget": 16384 } },
+            "medium": { "thinkingConfig": { "thinkingBudget": 32768 } },
+            "high": { "thinkingConfig": { "thinkingBudget": 65536 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 128000 } }
+          }
+        },
+        "claude-sonnet-4": {
+          "limit": { "context": 200000, "output": 64000 },
+          "name": "claude-sonnet-4 (enowX Labs)",
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "medium": { "thinkingConfig": { "thinkingBudget": 16384 } },
+            "high": { "thinkingConfig": { "thinkingBudget": 24576 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
+          }
+        },
+        "claude-haiku-4.5": {
+          "limit": { "context": 200000, "output": 64000 },
+          "name": "claude-haiku-4.5 (enowX Labs)",
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingConfig": { "thinkingBudget": 4096 } },
+            "medium": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "high": { "thinkingConfig": { "thinkingBudget": 16384 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 24576 } }
+          }
+        },
+        "gemini-2.5-pro": {
+          "limit": { "context": 1000000, "output": 65536 },
+          "name": "gemini-2.5-pro (enowX Labs)",
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingLevel": "low" },
+            "medium": { "thinkingLevel": "medium" },
+            "high": { "thinkingLevel": "high" },
+            "max": { "thinkingLevel": "high" }
+          }
+        },
+        "gemini-2.5-flash": {
+          "limit": { "context": 1000000, "output": 65536 },
+          "name": "gemini-2.5-flash (enowX Labs)",
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "minimal": { "thinkingLevel": "minimal" },
+            "low": { "thinkingLevel": "low" },
+            "medium": { "thinkingLevel": "medium" },
+            "high": { "thinkingLevel": "high" },
+            "max": { "thinkingLevel": "high" }
+          }
+        },
+        "deepseek-3.2": {
+          "limit": { "context": 164000, "output": 64000 },
+          "name": "deepseek-3.2 (enowX Labs)",
+          "modalities": { "input": ["text"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "medium": { "thinkingConfig": { "thinkingBudget": 16384 } },
+            "high": { "thinkingConfig": { "thinkingBudget": 24576 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
+          }
+        }
+      },
+      "name": "enowX Labs",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "apiKey": "YOUR_ENOWX_API_KEY_HERE",
+        "baseURL": "http://localhost:1429/v1"
+      }
+    },
+    "codebuddy": {
+      "models": {
+        "claude-opus-4.6": {
+          "limit": { "context": 1000000, "output": 64000 },
+          "name": "Claude Opus 4.6 (CodeBuddy Direct)",
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingConfig": { "thinkingBudget": 16384 } },
+            "medium": { "thinkingConfig": { "thinkingBudget": 32768 } },
+            "high": { "thinkingConfig": { "thinkingBudget": 65536 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 128000 } }
+          }
+        },
+        "gemini-2.5-pro": {
+          "limit": { "context": 1000000, "output": 65536 },
+          "name": "Gemini 2.5 Pro (CodeBuddy Direct)",
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
+          "variants": {
+            "low": { "thinkingLevel": "low" },
+            "medium": { "thinkingLevel": "medium" },
+            "high": { "thinkingLevel": "high" },
+            "max": { "thinkingLevel": "high" }
+          }
+        }
+      },
+      "name": "CodeBuddy Direct",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "apiKey": "YOUR_CODEBUDDY_API_KEY_HERE",
+        "baseURL": "http://127.0.0.1:8003/codebuddy/v1"
+      }
+    }
+  },
+  "lsp": {
+    "python": {
+      "command": ["pyright-langserver", "--stdio"],
+      "extensions": [".py", ".pyi"]
+    },
+    "typescript": {
+      "command": ["typescript-language-server", "--stdio"],
+      "extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]
+    },
+    "docker": {
+      "command": ["docker-langserver", "--stdio"],
+      "extensions": [".dockerfile"]
+    },
+    "bash": {
+      "command": ["bash-language-server", "start"],
+      "extensions": [".sh", ".bash", ".zsh"]
+    },
+    "yaml": {
+      "command": ["yaml-language-server", "--stdio"],
+      "extensions": [".yaml", ".yml"]
+    }
+  }
+}

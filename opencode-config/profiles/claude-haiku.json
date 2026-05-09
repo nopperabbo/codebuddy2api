@@ -1,0 +1,14 @@
+{
+  "id": "claude-haiku",
+  "name": "Claude Haiku — Lightning Fast",
+  "description": "Claude Haiku. Fastest Anthropic model, extremely cheap, great for simple tasks.",
+  "provider": "anthropic",
+  "model": "claude-3-5-haiku-20241022",
+  "maxTokens": 4096,
+  "temperature": 0.3,
+  "apiKeyEnv": "ANTHROPIC_API_KEY",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 8
+  }
+}

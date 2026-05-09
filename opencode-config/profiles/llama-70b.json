@@ -1,0 +1,15 @@
+{
+  "id": "llama-70b",
+  "name": "Llama 3.1 70B — Local Powerhouse",
+  "description": "Meta Llama 3.1 70B via Ollama. Powerful local model, no data leaves your machine.",
+  "provider": "ollama",
+  "model": "llama3.1:70b",
+  "maxTokens": 4096,
+  "temperature": 0.3,
+  "apiKeyEnv": null,
+  "endpoint": "http://localhost:11434",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 10
+  }
+}

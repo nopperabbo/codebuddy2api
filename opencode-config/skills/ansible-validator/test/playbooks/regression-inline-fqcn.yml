@@ -1,0 +1,15 @@
+---
+- name: Inline module style regression
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Inline short module should be detected
+      shell: echo "hello"
+
+    - name: Inline FQCN should not be detected
+      ansible.builtin.shell: echo "hello"
+
+    - name: Parameter keys must not be treated as module usage
+      ansible.builtin.user:
+        name: appuser
+        group: staff

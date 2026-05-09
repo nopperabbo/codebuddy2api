@@ -1,0 +1,9 @@
+---
+- import_playbook: bootstrap.yml
+
+- name: Mixed import + play regression
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Use short module form inside a real play
+      shell: echo "hello"

@@ -1,0 +1,1 @@
+Respond with code only. No explanations unless asked. Use comments for clarity.

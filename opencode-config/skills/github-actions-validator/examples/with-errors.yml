@@ -1,0 +1,47 @@
+# Example: Workflow with Intentional Errors
+# This workflow contains common errors for testing validation
+# Use for testing error detection: bash scripts/validate_workflow.sh --lint-only examples/with-errors.yml
+#
+# ERRORS IN THIS FILE (4 total, all caught by actionlint):
+# 1. Line 18: Invalid CRON expression (day 8 doesn't exist) [events]
+# 2. Line 25: Typo in runner label (ubuntu-lastest)         [runner-label]
+# 3. Line 37: Script injection vulnerability                 [expression]
+# 4. Line 43: Undefined job dependency (biuld instead of build) [job-needs]
+
+name: Workflow with Errors
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # ERROR: Invalid CRON - day of week 8 doesn't exist (should be 0-6)
+    - cron: '0 0 * * 8'
+  pull_request:
+
+jobs:
+  build:
+    name: Build
+    # ERROR: Typo in runner label (should be ubuntu-latest)
+    runs-on: ubuntu-lastest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: npm run build
+
+      # ERROR: Script injection vulnerability - untrusted input directly in script
+      - name: Process issue
+        run: |
+          echo "Processing: ${{ github.event.issue.title }}"
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    # ERROR: Undefined job dependency (typo: biuld instead of build)
+    needs: biuld
+
+    steps:
+      - name: Deploy
+        run: echo "Deploying..."

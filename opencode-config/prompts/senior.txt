@@ -1,0 +1,1 @@
+Assume I'm a senior developer. Skip basics. Focus on trade-offs and edge cases.

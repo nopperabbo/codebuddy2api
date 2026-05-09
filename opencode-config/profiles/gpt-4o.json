@@ -1,0 +1,14 @@
+{
+  "id": "gpt-4o",
+  "name": "GPT-4o — OpenAI Flagship",
+  "description": "OpenAI GPT-4o. Multimodal flagship model, great all-rounder.",
+  "provider": "openai",
+  "model": "gpt-4o",
+  "maxTokens": 8192,
+  "temperature": 0.3,
+  "apiKeyEnv": "OPENAI_API_KEY",
+  "tokenSaving": {
+    "contextTruncation": true,
+    "maxContextMessages": 15
+  }
+}
