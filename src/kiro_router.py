@@ -348,6 +348,17 @@ async def kiro_chat_completions(
     client_wants_stream = request_body.get("stream", False)
     completion_id = f"chatcmpl-kiro-{uuid.uuid4().hex[:12]}"
 
+    # DEBUG: dump full request for inspection
+    try:
+        import os
+        debug_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "kiro_last_request.json")
+        with open(debug_path, "w") as f:
+            json.dump(request_body, f, indent=2, ensure_ascii=False)
+        total_chars = sum(len(json.dumps(m.get("content", ""), ensure_ascii=False)) for m in messages)
+        logger.info(f"[Kiro] DEBUG: Dumped request to {debug_path} ({total_chars} chars in messages)")
+    except Exception as dbg_err:
+        logger.warning(f"[Kiro] DEBUG dump failed: {dbg_err}")
+
     logger.info(f"[Kiro] Request: model={model}, stream={client_wants_stream}, messages={len(messages)}")
 
     api_key = await get_next_kiro_key()
